@@ -42,7 +42,6 @@ def check_env_variables() -> None:
         "GRASPIL_API_KEY",
         "GOOGLE_API_KEY",
         "SEARCH_ENGINE_GLOBAL_ID",
-        "DB_PATH",
         "DB_HOST",
         "DB_PORT",
         "DB_NAME",
