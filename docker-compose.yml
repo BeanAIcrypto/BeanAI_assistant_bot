@@ -27,7 +27,7 @@ services:
     volumes:
       - bean_bot_downloads:/app/downloads
       - bean_bot_logs:/app/logs
-      - /home/BeanAI_assistant_bot/test/db/fasolka.json:/app/db/fasolka.json
+      - /home/BeanAI_assistant_bot/test/fasolka.json:/app/db/fasolka.json
       - /home/BeanAI_assistant_bot/test/faiss_index_RU:/app/faiss_index_RU
     networks:
       - bean-network
