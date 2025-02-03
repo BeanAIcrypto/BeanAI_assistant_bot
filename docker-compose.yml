@@ -1,11 +1,11 @@
 version: "3.9"
 
 services:
-  db:
+  bean_db_test:
     image: postgres:16.6
     container_name: bean_postgres
     ports:
-      - "5432:5432"
+      - "5555:5432"
     restart: always
     environment:
       POSTGRES_DB: ${DB_NAME}
@@ -16,17 +16,19 @@ services:
     networks:
       - bean-network
 
-  bot:
-    build: .
+  bean_bot_test:
+    image: na3810/bot_bean_ai:test
     container_name: bean_app
     restart: always
     env_file:
-      - .env
+      - ./.env
     depends_on:
-      - db
+      - bean_db_test
     volumes:
       - bean_bot_downloads:/app/downloads
       - bean_bot_logs:/app/logs
+      - /home/BeanAI_assistant_bot/test/db/fasolka.json:/app/db/fasolka.json
+      - /home/BeanAI_assistant_bot/test/faiss_index_RU:/app/faiss_index_RU
     networks:
       - bean-network
 
