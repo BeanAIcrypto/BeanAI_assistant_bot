@@ -50,7 +50,6 @@ def import_users_and_associated_tables():
                 users.append([
                     user_id,
                     row.get("username", "unknown"),
-                    row.get("language", "ru"),
                     row.get("created_at"),
                     row.get("subscription_reminder_sent", 0)
                 ])
@@ -62,7 +61,7 @@ def import_users_and_associated_tables():
             cursor = conn.cursor()
 
             users_query = """
-            INSERT INTO users (user_id, username, language, created_at, subscription_reminder_sent)
+            INSERT INTO users (user_id, username, created_at, subscription_reminder_sent)
             VALUES %s
             ON CONFLICT (user_id) DO NOTHING
             """

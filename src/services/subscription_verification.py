@@ -74,7 +74,7 @@ async def subscription(user_id: int, language: str, message, bot: Bot) -> bool:
 
         if not await check_subscription(user_id, bot):
             sub_message = {
-                "ru": f"Подпишитесь на наш <a href='{os.getenv('CHANNEL_LINK')}'>Telegram-канал</a> 😎",
+                "en": f"Подпишитесь на наш <a href='{os.getenv('CHANNEL_LINK')}'>Telegram-канал</a> 😎",
                 "en": f"Please subscribe to our <a href='{os.getenv('CHANNEL_LINK')}'>Telegram channel</a> 😎"
             }.get(language, "Please subscribe to our channel.")
 

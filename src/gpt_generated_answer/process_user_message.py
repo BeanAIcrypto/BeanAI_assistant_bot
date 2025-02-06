@@ -1,5 +1,6 @@
 import logging
 import re
+from datetime import datetime
 
 from dotenv import load_dotenv
 from openai import BadRequestError, RateLimitError
@@ -250,18 +251,20 @@ async def process_user_message(
         await bot.send_chat_action(chat_id=chat_id, action='typing')
         first_message = await bot.send_message(chat_id=chat_id, text=MESSAGES["process_user_message"]["en"])
         await bot.send_chat_action(chat_id=message.chat.id, action=ChatActions.TYPING)
+
+        prompt_and_data = PROMTS[prompt]["en"] + f"{datetime.now()}"
         if prompt == 'image':
-            response = await image_processing(message, text, bot, user_id, file_url)
+            response = await image_processing(message, text, bot, user_id, file_url, prompt=prompt_and_data)
         elif prompt in ('you_tube_link', 'link', 'document'):
             response = await run_gpt(
-                user_id, bot, prompt_text=PROMTS[prompt]["en"],
+                user_id, bot, prompt_text=prompt_and_data,
                 user_input=text, history=history
             )
             question, name_document_link = data_from_question
             text = f'Запрос пользователя: {question}. Пользователь предоставил ссылку: "{name_document_link}"'
         else:
             response_gent = await run_agent(
-                user_id, text, history, prompt_text=PROMTS[prompt]["en"]
+                user_id, text, history, prompt_text=prompt_and_data
             )
             response = clean_agent_response(response_gent)
 

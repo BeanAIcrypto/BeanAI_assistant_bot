@@ -507,10 +507,10 @@ async def handle_photo(message: types.Message) -> None:
         await message.reply(MESSAGES_ERROR["photo_handler_file_not_found"]["en"])
     except ValueError as value_error:
         logger.error(f"Ошибка обработки изображения: {value_error}", exc_info=True)
-        await message.reply(MESSAGES_ERROR["photo_handler_error"]["ru"])
+        await message.reply(MESSAGES_ERROR["photo_handler_error"]["en"])
     except Exception as e:
         logger.error(f"Неизвестная ошибка при обработке изображения: {e}", exc_info=True)
-        await message.reply(MESSAGES_ERROR["photo_handler_error"]["ru"])
+        await message.reply(MESSAGES_ERROR["photo_handler_error"]["en"])
 
 
 @dp.message_handler(auto_group=True, mention_bot=True, content_types=ContentTypes.ANY)
@@ -532,14 +532,14 @@ async def all_updates_handler(message: types.Message) -> None:
             f"Пользователь {user_name} (ID: {user_id}) отправил сообщение неизвестного типа: {message.content_type}"
         )
 
-        await message.answer(MESSAGES["all_updates_handler"]["ru"])
+        await message.answer(MESSAGES["all_updates_handler"]["en"])
         logger.info(f"Ответ на неизвестный тип сообщения отправлен пользователю {user_name} (ID: {user_id}).")
     except ValueError as ve:
         logger.error(f"Ошибка определения языка для пользователя {user_id}: {ve}", exc_info=True)
-        await message.reply(MESSAGES_ERROR["all_updates_handler_error"]["ru"])
+        await message.reply(MESSAGES_ERROR["all_updates_handler_error"]["en"])
     except Exception as e:
         logger.error(f"Ошибка в обработчике неизвестных сообщений для пользователя {user_id}: {e}", exc_info=True)
-        await message.reply(MESSAGES_ERROR["all_updates_handler_error"]["ru"])
+        await message.reply(MESSAGES_ERROR["all_updates_handler_error"]["en"])
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith("rate_"), mention_bot=True)
@@ -569,7 +569,7 @@ async def process_callback_rating(callback_query: types.CallbackQuery) -> None:
 
         logger.info(f"Пользователь {user_name} (ID: {user_id}) выбрал оценку: {rating} для ответа {response_id}")
 
-        await bot.send_message(user_id, MESSAGES["process_callback_rating"]["ru"])
+        await bot.send_message(user_id, MESSAGES["process_callback_rating"]["en"])
 
         await bot.edit_message_reply_markup(
             callback_query.message.chat.id,
@@ -586,13 +586,13 @@ async def process_callback_rating(callback_query: types.CallbackQuery) -> None:
 
     except ValueError as ve:
         logger.error(f"Ошибка разбора данных колбэка для пользователя {user_name} (ID: {user_id}): {ve}")
-        await bot.send_message(user_id, MESSAGES_ERROR["process_callback_rating_error"]["ru"])
+        await bot.send_message(user_id, MESSAGES_ERROR["process_callback_rating_error"]["en"])
     except KeyError as ke:
         logger.error(str(ke))
         await bot.send_message(user_id, MESSAGES["start"])
     except Exception as e:
         logger.error(f"Ошибка при обработке колбэка оценки для пользователя {user_name} (ID: {user_id}): {str(e)}")
-        await bot.send_message(user_id, MESSAGES_ERROR["process_callback_rating_error"]["ru"])
+        await bot.send_message(user_id, MESSAGES_ERROR["process_callback_rating_error"]["en"])
 
 
 @dp.callback_query_handler(lambda c: c.data in ["strategy_investment", "improve_portfolio"], mention_bot=True)
@@ -612,14 +612,14 @@ async def process_callback_button(callback_query: types.CallbackQuery) -> None:
         if callback_query.data == "strategy_investment":
             await bot.send_message(
                 user_id,
-                MESSAGES['process_callback_button_strategy_investment']["ru"],
+                MESSAGES['process_callback_button_strategy_investment']["en"],
                 parse_mode="MarkdownV2"
             )
             logger.info(f"Пользователь {user_id} выбрал стратегию инвестиций.")
         elif callback_query.data == "improve_portfolio":
             await bot.send_message(
                 user_id,
-                MESSAGES['process_callback_button_improve_portfolio']["ru"],
+                MESSAGES['process_callback_button_improve_portfolio']["en"],
                 parse_mode="MarkdownV2"
             )
             logger.info(f"Пользователь {user_id} выбрал улучшение портфолио.")
@@ -628,10 +628,10 @@ async def process_callback_button(callback_query: types.CallbackQuery) -> None:
 
     except KeyError as ke:
         logger.error(f"Ошибка доступа к сообщениям: {ke}", exc_info=True)
-        await bot.send_message(user_id, MESSAGES_ERROR["process_callback_button_error"]["ru"])
+        await bot.send_message(user_id, MESSAGES_ERROR["process_callback_button_error"]["en"])
     except Exception as e:
         logger.error(f"Ошибка обработки кнопки стратегии для пользователя {user_id}: {str(e)}", exc_info=True)
-        await bot.send_message(user_id, MESSAGES_ERROR["process_callback_button_error"]["ru"])
+        await bot.send_message(user_id, MESSAGES_ERROR["process_callback_button_error"]["en"])
 
 
 @dp.my_chat_member_handler()

@@ -39,4 +39,3 @@ volumes:
   bean_postgres_data:
   bean_bot_downloads:
   bean_bot_logs:
-

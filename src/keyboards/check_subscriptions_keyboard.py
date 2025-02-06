@@ -6,12 +6,12 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 logger = logging.getLogger(__name__)
 
 
-def check_subscriptions_keyboard(language: Literal["ru", "en"]) -> InlineKeyboardMarkup:
+def check_subscriptions_keyboard(language: Literal["en", "en"]) -> InlineKeyboardMarkup:
     """
     Создает клавиатуру для подписки в зависимости от языка.
 
     Args:
-        language (Literal["ru", "en"]): Язык пользователя ("ru" или "en").
+        language (Literal["en", "en"]): Язык пользователя ("en" или "en").
 
     Returns:
         InlineKeyboardMarkup: Клавиатура с кнопкой подписки.
@@ -28,7 +28,7 @@ def check_subscriptions_keyboard(language: Literal["ru", "en"]) -> InlineKeyboar
             logger.error("Переменная окружения 'CHANNEL_LINK' не установлена")
             raise EnvironmentError("Переменная окружения 'CHANNEL_LINK' не установлена")
 
-        if language == "ru":
+        if language == "en":
             buttons = [[InlineKeyboardButton(text='Подписаться', url=channel_link)]]
         elif language == "en":
             buttons = [[InlineKeyboardButton(text='Subscribe', url=channel_link)]]
@@ -51,6 +51,3 @@ def check_subscriptions_keyboard(language: Literal["ru", "en"]) -> InlineKeyboar
     except Exception as error:
         logger.error(f"Неизвестная ошибка при создании клавиатуры: {error}")
         raise
-
-
-

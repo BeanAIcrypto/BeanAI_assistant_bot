@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import os
-from datetime import datetime
 from typing import List, Dict, Optional, Tuple, Union, Any
 
 from dotenv import load_dotenv
@@ -204,7 +203,7 @@ def create_agent(prompt_text: str, history: Optional[List[Dict[str, str]]] = Non
 
         if prompt_text:
             memory.chat_memory.messages.append(
-                SystemMessage(content=prompt_text + f"{datetime.now()}")
+                SystemMessage(content=prompt_text)
             )
 
         if history:

@@ -91,7 +91,7 @@ async def downloads_image(message: types.Message, file_url: str) -> Tuple[str, s
         await clear_directory(base_dir)
 
 
-async def image_processing(message, question: str, bot, user_id: int, file_url: str) -> None:
+async def image_processing(message, question: str, bot, user_id: int, file_url: str, prompt: str) -> None:
     """
     Обрабатывает изображение и отправляет запрос к OpenAI для получения описания.
 
@@ -100,6 +100,8 @@ async def image_processing(message, question: str, bot, user_id: int, file_url: 
         question (str): Вопрос пользователя.
         bot: Экземпляр Telegram-бота.
         user_id (int): ID пользователя.
+        file_url (str): Путь сохранения картинки.
+        prompt(str): Промт и текущей датой.
 
     Returns:
         None
@@ -118,7 +120,7 @@ async def image_processing(message, question: str, bot, user_id: int, file_url: 
         messages = [
             {
                 "role": "system",
-                "content": [{"type": "text", "text": PROMTS['image']["en"]}],
+                "content": [{"type": "text", "text": prompt}],
             },
             {
                 "role": "user",

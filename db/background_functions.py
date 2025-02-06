@@ -39,7 +39,6 @@ async def send_reminder_work(bot: Bot) -> None:
                     SELECT 
                         users.id, 
                         users.user_id, 
-                        users.language, 
                         reminder.{column_name},
                         COALESCE(
                             (
@@ -69,7 +68,6 @@ async def send_reminder_work(bot: Bot) -> None:
                     GROUP BY 
                         users.id, 
                         users.user_id, 
-                        users.language, 
                         reminder.{column_name}, 
                         last_interaction;
                 """
@@ -79,13 +77,13 @@ async def send_reminder_work(bot: Bot) -> None:
 
                 logger.info(f"Найдено {len(rows)} пользователей для отправки напоминаний на {hours} часов.")
 
-                for table_id, user_id, language, _, last_interaction in rows:
+                for table_id, user_id, _, last_interaction in rows:
                     message_key = f'send_reminder_{hours}h'
-                    message_text = MESSAGES[message_key][language]
+                    message_text = MESSAGES[message_key]["en"]
 
                     try:
                         if hours == 72:
-                            reminder_keyboard = get_reminder_keyboard(language)
+                            reminder_keyboard = get_reminder_keyboard("en")
                             await bot.send_message(user_id, message_text, reply_markup=reminder_keyboard)
                         else:
                             await bot.send_message(user_id, message_text)
@@ -134,7 +132,6 @@ async def send_subscription_reminder(bot: Bot) -> None:
 
             query = '''
                 SELECT u.user_id,
-                       u.language,
                        t.reminder_24_sent_subscription,
                        t.reminder_168_sent_subscription,
                        (SELECT MAX(created_at) 
@@ -149,7 +146,7 @@ async def send_subscription_reminder(bot: Bot) -> None:
 
             logger.info(f"Найдено {len(rows)} пользователей для отправки напоминаний о подписке.")
 
-            for user_id, language, reminder_24_sent, reminder_168_sent, last_interaction in rows:
+            for user_id, reminder_24_sent, reminder_168_sent, last_interaction in rows:
                 if last_interaction is None:
                     logger.info(f"Пропуск пользователя {user_id}, так как нет взаимодействий.")
                     continue
@@ -160,8 +157,8 @@ async def send_subscription_reminder(bot: Bot) -> None:
                 if not reminder_24_sent and last_interaction < time_24_hours_ago:
                     await bot.send_message(
                         user_id,
-                        MESSAGES['send_subscription_reminder_24'][language] + os.getenv('CHANNEL_LINK'),
-                        reply_markup=check_subscriptions_keyboard(language),
+                        MESSAGES['send_subscription_reminder_24']["en"] + os.getenv('CHANNEL_LINK'),
+                        reply_markup=check_subscriptions_keyboard("en"),
                     )
                     cursor.execute('UPDATE reminder SET reminder_24_sent_subscription = 1 WHERE user_id = %s', (user_id,))
                     connection.commit()
@@ -169,8 +166,8 @@ async def send_subscription_reminder(bot: Bot) -> None:
                 if not reminder_168_sent and last_interaction < time_168_hours_ago:
                     await bot.send_message(
                         user_id,
-                        MESSAGES['send_subscription_reminder_168'][language] + os.getenv('CHANNEL_LINK'),
-                        reply_markup=check_subscriptions_keyboard(language),
+                        MESSAGES['send_subscription_reminder_168']["en"] + os.getenv('CHANNEL_LINK'),
+                        reply_markup=check_subscriptions_keyboard("en"),
                     )
                     cursor.execute('UPDATE reminder SET reminder_168_sent_subscription = 1 WHERE user_id = %s', (user_id,))
                     connection.commit()
@@ -218,3 +215,4 @@ async def start_background_tasks(bot: Bot) -> None:
     except Exception as e:
         logger.error(f"Неизвестная ошибка при обработке фоновой задачи: {str(e)}")
         raise Exception(f"Неизвестная ошибка: {str(e)}")
+
