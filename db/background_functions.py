@@ -185,34 +185,30 @@ async def send_subscription_reminder(bot: Bot) -> None:
 
 async def start_background_tasks(bot: Bot) -> None:
     """
-    Запускает фоновую задачу для отправки напоминаний каждые 24 часа.
+    Запускает фоновую задачу для отправки напоминаний с разными интервалами.
 
-    Args:
-        bot (Bot): Экземпляр бота.
-
-    Raises:
-        asyncio.TimeoutError: Ошибка тайм-аута при ожидании выполнения задачи.
-        ConnectionError: Ошибка при подключении к внешним сервисам (например, при отправке напоминаний).
-        ValueError: Некорректные данные или ошибки логики при обработке задач.
-        Exception: Общая ошибка при обработке фоновой задачи.
+    - send_reminder_work() каждые 29 минут.
+    - send_subscription_reminder() каждые 12 часов.
     """
-    try:
-        logger.info("Запуск фоновой задачи для отправки напоминаний.")
-        while True:
-            await send_reminder_work(bot)
-            await send_subscription_reminder(bot)
-            logger.info("Фоновые задачи выполнены, ожидаем следующий запуск.")
-            await asyncio.sleep(86400)
-    except asyncio.TimeoutError as e:
-        logger.error(f"Ошибка тайм-аута при обработке фоновой задачи: {str(e)}")
-        raise asyncio.TimeoutError(f"Ошибка тайм-аута: {str(e)}")
-    except ConnectionError as e:
-        logger.error(f"Ошибка подключения при обработке фоновой задачи: {str(e)}")
-        raise ConnectionError(f"Ошибка подключения: {str(e)}")
-    except ValueError as e:
-        logger.error(f"Ошибка в логике фоновой задачи: {str(e)}")
-        raise ValueError(f"Ошибка данных или логики: {str(e)}")
-    except Exception as e:
-        logger.error(f"Неизвестная ошибка при обработке фоновой задачи: {str(e)}")
-        raise Exception(f"Неизвестная ошибка: {str(e)}")
 
+    async def periodic_task(func, interval):
+        """Запускает переданную функцию с указанным интервалом в секундах."""
+        while True:
+            try:
+                await func(bot)
+                logger.info(
+                    f"Фоновая задача {func.__name__} выполнена, следующий запуск через {interval / 60:.1f} мин.")
+            except asyncio.TimeoutError as e:
+                logger.error(f"Ошибка тайм-аута в {func.__name__}: {str(e)}")
+            except ConnectionError as e:
+                logger.error(f"Ошибка подключения в {func.__name__}: {str(e)}")
+            except ValueError as e:
+                logger.error(f"Ошибка логики в {func.__name__}: {str(e)}")
+            except Exception as e:
+                logger.error(f"Неизвестная ошибка в {func.__name__}: {str(e)}")
+
+            await asyncio.sleep(interval)
+
+    asyncio.create_task(periodic_task(send_reminder_work, 29 * 60))
+    asyncio.create_task(periodic_task(send_subscription_reminder, 12 * 60 * 60))
+    logger.info("Фоновые задачи запущены.")

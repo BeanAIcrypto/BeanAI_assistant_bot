@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libmagic1 \
     file \
+    mime-support \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

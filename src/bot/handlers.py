@@ -447,7 +447,6 @@ async def document_handler(message: types.Message) -> None:
             data_from_question=[question, file_name],
             message=message
         )
-        await clear_directory(base_dir)
         logger.info(f"Файл {file_name} был удален после обработки.")
     except FileNotFoundError as file_error:
         logger.error(f"Файл документа не найден: {file_error}", exc_info=True)
@@ -458,6 +457,8 @@ async def document_handler(message: types.Message) -> None:
     except Exception as e:
         logger.error(f"Неизвестная ошибка при обработке документа: {e}", exc_info=True)
         await message.reply(MESSAGES_ERROR["document_handler_error"]["en"])
+    finally:
+        await clear_directory(base_dir)
 
 
 @dp.message_handler(content_types=ContentTypes.PHOTO, mention_bot=True, auto_group=True)

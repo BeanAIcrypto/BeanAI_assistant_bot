@@ -32,11 +32,11 @@ async def transcribe_voice_message(message, user_id: int, user_name: str, bot) -
         ValueError: Ошибка проверки лимита или данных.
         Exception: Общая ошибка обработки голосового сообщения.
     """
+    request_id = str(uuid.uuid4())
+    base_dir = os.path.join("downloads", str(user_id), request_id)
+    os.makedirs(base_dir, exist_ok=True)
+    audio_path = os.path.join(base_dir, "voice_response.mp3")
     try:
-        request_id = str(uuid.uuid4())
-        base_dir = os.path.join("downloads", str(user_id), request_id)
-        os.makedirs(base_dir, exist_ok=True)
-        audio_path = os.path.join(base_dir, "voice_response.mp3")
 
         new_file = await message.voice.get_file()
         await new_file.download(destination_file=audio_path)
@@ -51,13 +51,13 @@ async def transcribe_voice_message(message, user_id: int, user_name: str, bot) -
             return None
 
         transcript_text, token = await transcribe_voice(audio_path, message, user_id, bot)
+
         if not transcript_text:
             logger.warning(f"Транскрипция вернула пустой результат для {audio_path}.")
             await message.answer(MESSAGES_ERROR["empty_transcription"]["en"])
             return None
 
         logger.info(f"Результат транскрипции: {transcript_text[:50]}")
-        await clear_directory(base_dir)
         return transcript_text
 
     except ValueError as ve:
@@ -69,6 +69,8 @@ async def transcribe_voice_message(message, user_id: int, user_name: str, bot) -
         logger.error(f"Ошибка обработки голосового сообщения: {e}")
         await message.answer(MESSAGES_ERROR["empty_transcription"]["en"])
         return None
+    finally:
+        await clear_directory(base_dir)
 
 
 

@@ -74,7 +74,6 @@ async def downloads_image(message: types.Message, file_url: str) -> Tuple[str, s
         if response.status_code != 200:
             logger.error("Ошибка загрузки изображения. Статус код: %s", response.status_code)
             await message.reply("Ошибка загрузки изображения. Попробуйте снова.")
-            await clear_directory(base_dir)
             return None
 
         with open(image_path, 'wb') as f:
@@ -84,10 +83,10 @@ async def downloads_image(message: types.Message, file_url: str) -> Tuple[str, s
     except requests.exceptions.RequestException as e:
         logger.error(f"Ошибка запроса при загрузке изображения: {e}", exc_info=True)
         await message.reply("Произошла ошибка при загрузке изображения. Попробуйте снова.")
-        await clear_directory(base_dir)
     except Exception as e:
         logger.error(f"Неизвестная ошибка при работе с изображением: {e}", exc_info=True)
         await message.reply("Произошла неизвестная ошибка при обработке изображения.")
+    finally:
         await clear_directory(base_dir)
 
 
