@@ -82,10 +82,10 @@ async def downloads_image(message: types.Message, file_url: str) -> Tuple[str, s
         return image_path, base_dir
     except requests.exceptions.RequestException as e:
         logger.error(f"Ошибка запроса при загрузке изображения: {e}", exc_info=True)
-        await message.reply("Произошла ошибка при загрузке изображения. Попробуйте снова.")
+        await message.reply("There was an error loading the image. Try again.")
     except Exception as e:
         logger.error(f"Неизвестная ошибка при работе с изображением: {e}", exc_info=True)
-        await message.reply("Произошла неизвестная ошибка при обработке изображения.")
+        await message.reply("An unknown error occurred during image processing.")
     finally:
         await clear_directory(base_dir)
 
@@ -156,7 +156,7 @@ async def image_processing(message, question: str, bot, user_id: int, file_url: 
             raise ValueError("Ответ от OpenAI не содержит контента.")
     except ValueError as e:
         logger.error(f"Ошибка обработки ответа от OpenAI: {e}")
-        await message.reply("Ответ от OpenAI не содержит описания.")
+        await message.reply("The response from OpenAI does not include a description.")
     except Exception as e:
         logger.error(f"Ошибка обработки изображения: {e}")
-        await message.reply("Произошла ошибка при обработке изображения.")
+        await message.reply("An error occurred during image processing.")
