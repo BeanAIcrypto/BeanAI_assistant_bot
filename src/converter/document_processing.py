@@ -97,6 +97,10 @@ def extract_text_from_docx(file_path: str) -> str:
         IOError: Ошибка ввода/вывода при чтении файла.
     """
     try:
+        _, tipy_doc = os.path.splitext(file_path)
+        if tipy_doc == ".doc":
+            logger.error(f"Формат .doc не поддерживается: {file_path}")
+            return "The .doc format is not supported. Please provide the document in .docx format."
         doc: Document = Document(file_path)
         paragraphs: List[str] = [para.text for para in doc.paragraphs]
         return "\n".join(paragraphs)
@@ -104,15 +108,24 @@ def extract_text_from_docx(file_path: str) -> str:
         logger.error(f"Файл DOCX не найден: {file_path}")
         raise FileNotFoundError(f"Файл {file_path} не найден.")
     except ValueError as e:
-        logger.error(f"Файл DOCX поврежден или имеет неверный формат: {file_path}")
-        raise ValueError(f"Файл {file_path} поврежден или не является корректным DOCX файлом.")
+        logger.error(
+            f"Файл DOCX поврежден или имеет неверный формат: {file_path}"
+        )
+        raise ValueError(
+            f"Файл {file_path} поврежден или не является корректным DOCX файлом."
+        )
     except IOError as e:
-        logger.error(f"Ошибка ввода/вывода при чтении DOCX файла {file_path}: {e}")
+        logger.error(
+            f"Ошибка ввода/вывода при чтении DOCX файла {file_path}: {e}"
+        )
         raise IOError(f"Не удалось прочитать файл {file_path}.")
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при обработке DOCX файла {file_path}: {e}")
-        raise Exception(f"Произошла ошибка при извлечении текста из файла {file_path}.")
-
+        logger.error(
+            f"Неизвестная ошибка при обработке DOCX файла {file_path}: {e}"
+        )
+        raise Exception(
+            f"Произошла ошибка при извлечении текста из файла {file_path}."
+        )
 
 def extract_text_from_odt(file_path: str) -> str:
     """
