@@ -286,59 +286,7 @@ def extract_text_from_zip(file_path: str) -> Optional[str]:
 
 
 def extract_text_from_rar(file_path: str) -> Optional[str]:
-    """
-    Извлекает текст из файлов в RAR-архиве с учетом MIME-типа.
-
-    Args:
-        file_path (str): Путь к RAR-архиву.
-
-    Returns:
-        Optional[str]: Извлеченный текст из поддерживаемых файлов или None в случае ошибки.
-
-    Raises:
-        FileNotFoundError: Если файл архива не найден.
-        ValueError: Если архив пуст или не содержит поддерживаемых файлов.
-        rarfile.BadRarFile: Если файл не является корректным RAR-архивом.
-        IOError: Ошибка ввода-вывода при открытии файла.
-    """
-    try:
-        extracted_text = []
-
-        with rarfile.RarFile(file_path, 'r') as archive:
-            if not archive.infolist():
-                raise ValueError(f"RAR-архив '{file_path}' пуст или некорректен.")
-
-            for file in archive.infolist():
-                mime_type = mimetypes.guess_type(file.filename)[0] or 'application/octet-stream'
-
-                if mime_type in text_extraction_from_a_document:
-                    with archive.open(file.filename) as f:
-                        extraction_function = text_extraction_from_a_document[mime_type]
-                        text_content = extraction_function(f)
-                        if text_content:
-                            extracted_text.append(text_content)
-                        else:
-                            logger.error(f"Не удалось извлечь текст из файла: {file.filename}")
-                else:
-                    logger.error(f"Неподдерживаемый формат файла: {file.filename} (MIME-тип: {mime_type})")
-
-        if not extracted_text:
-            raise ValueError(f"RAR-архив '{file_path}' не содержит поддерживаемых файлов.")
-
-        return "\n".join(extracted_text)
-
-    except FileNotFoundError as e:
-        logger.error(f"Файл RAR не найден: {file_path}")
-        raise FileNotFoundError(f"RAR-файл '{file_path}' не найден.") from e
-    except rarfile.BadRarFile as e:
-        logger.error(f"Некорректный RAR-архив: {file_path}")
-        raise rarfile.BadRarFile(f"Файл '{file_path}' не является корректным RAR-архивом.") from e
-    except IOError as e:
-        logger.error(f"Ошибка ввода-вывода при обработке RAR-архива: {e}")
-        raise IOError(f"Ошибка ввода-вывода при обработке файла '{file_path}'.") from e
-    except Exception as e:
-        logger.error(f"Произошла ошибка при обработке RAR-архива: {e}")
-        raise Exception(f"Ошибка при обработке RAR-архива '{file_path}': {str(e)}") from e
+    return "Данный формат не поддерживается. Сконвертируйте, пожалуйста в .zip"
 
 
 def extract_text_from_7z(file_path: str) -> Optional[str]:

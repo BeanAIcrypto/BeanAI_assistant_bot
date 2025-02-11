@@ -162,6 +162,7 @@ async def send_subscription_reminder(bot: Bot) -> None:
                     )
                     cursor.execute('UPDATE reminder SET reminder_24_sent_subscription = 1 WHERE user_id = %s', (user_id,))
                     connection.commit()
+                    continue
 
                 if not reminder_168_sent and last_interaction < time_168_hours_ago:
                     await bot.send_message(
