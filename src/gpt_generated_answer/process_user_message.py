@@ -141,52 +141,48 @@ def convert_markdown_to_markdownv2(text: str) -> str:
         str: Текст, преобразованный в формат MarkdownV2.
     """
     try:
-        special_chars = r'\[\]()~`>#+\-=|{}.!'
+        special_chars = r"\[\]()~`>#+\-=|{}.!"
+
+        username_pattern = re.compile(r'(@[A-Za-z0-9_]{5,32})')
+
+        usernames = {}
+
+        def save_username(match):
+            """Сохраняет юзернеймы временно, чтобы не экранировать _ дважды."""
+            username = match.group(0)
+            placeholder = f"%%USERNAME{len(usernames)}%%"
+            usernames[placeholder] = username.replace("_", r"\_")
+            return placeholder
+
+        text = username_pattern.sub(save_username, text)
 
         def escape_special_chars(part: str) -> str:
-            """Экранирует специальные символы MarkdownV2."""
-            return re.sub(r'([{}])'.format(re.escape(special_chars)), r'\\\1', part)
+            """Экранирует спецсимволы MarkdownV2, но не трогает _ внутри юзернеймов."""
+            part = re.sub(r"([{}])".format(re.escape(special_chars)), r"\\\1", part)
+            return part
 
         def process_text_part(part: str) -> str:
-            """Обрабатывает обычный текст."""
-            part = re.sub(r'(?<!_)_(?!_)', r'\_', part)
-            part = re.sub(r'(?<!\*)\*(?!\*)', r'\*', part)
-            part = re.sub(r'\*\*(.*?)\*\*', r'*\1*', part)
-            part = re.sub(r'### (.*?)\n', r'__\1__\n', part)
-            part = escape_special_chars(part)
-            return part
+            """Обрабатывает обычный текст, не затрагивая кодовые блоки."""
+            part = re.sub(r"(?<!\\)_", r"\_", part)
+            part = re.sub(r"(?<!\*)\*(?!\*)", r"\*", part)
+            part = re.sub(r"\*\*(.*?)\*\*", r"*\1*", part)
+            part = re.sub(r"### (.*?)\n", r"__\1__\n", part)
+            return escape_special_chars(part)
 
-        def process_latex(part: str) -> str:
-            """Обрабатывает только блоки LaTeX внутри текста."""
-
-            def replace_latex(match):
-                """Заменяет найденное выражение LaTeX на Unicode."""
-                return latex_to_unicode(match.group(1))
-
-            latex_patterns = [
-                (re.compile(r'\\\((.*?)\\\)', re.DOTALL), replace_latex),
-                (re.compile(r'\\\[(.*?)\\\]', re.DOTALL), replace_latex),
-                (re.compile(r'\$(.*?)\$', re.DOTALL), replace_latex),
-                (re.compile(r'\$\$(.*?)\$\$', re.DOTALL), replace_latex)
-            ]
-
-            for pattern, repl in latex_patterns:
-                part = pattern.sub(repl, part)
-            return part
-
-        code_block_pattern = re.compile(r'(```.*?```)', re.DOTALL)
+        code_block_pattern = re.compile(r"(```.*?```)", re.DOTALL)
         parts = code_block_pattern.split(text)
 
-        processed_parts = []
-        for i, part in enumerate(parts):
-            if part.startswith('```'):
-                processed_parts.append(part)
-            else:
-                part = process_latex(part)
-                part = process_text_part(part)
-                processed_parts.append(part)
+        processed_parts = [
+            part if part.startswith("```") else process_text_part(part)
+            for part in parts
+        ]
 
-        return ''.join(processed_parts)
+        result = "".join(processed_parts)
+
+        for placeholder, username in usernames.items():
+            result = result.replace(placeholder, username)
+
+        return result
 
     except Exception as e:
         logger.error(f"Ошибка перевода в MarkdownV2: {str(e)}")
