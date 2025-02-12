@@ -12,7 +12,8 @@ class GroupAutoRegisterFilter(BoundFilter):
     """
     Фильтр, предназначенный для автоматической регистрации пользователя в группе.
     """
-    key = 'auto_group'
+
+    key = "auto_group"
 
     def __init__(self, auto_group: bool) -> None:
         self.auto_group = auto_group
@@ -31,11 +32,11 @@ class GroupAutoRegisterFilter(BoundFilter):
             if isinstance(obj, types.Message):
                 chat = obj.chat
                 user_id = obj.from_user.id
-                username = obj.from_user.username or 'NoUserName'
+                username = obj.from_user.username or "NoUserName"
             elif isinstance(obj, types.CallbackQuery):
                 chat = obj.message.chat
                 user_id = obj.from_user.id
-                username = obj.from_user.username or 'NoUserName'
+                username = obj.from_user.username or "NoUserName"
             else:
                 return False
 
@@ -50,7 +51,9 @@ class GroupAutoRegisterFilter(BoundFilter):
 
             return False
         except Exception as error:
-            logger.exception(f"[GroupAutoRegister] Ошибка при регистрации пользователя: {error}")
+            logger.exception(
+                f"[GroupAutoRegister] Ошибка при регистрации пользователя: {error}"
+            )
             return False
 
 
@@ -61,7 +64,8 @@ class MentionBotFilter(BoundFilter):
       - В личке (PRIVATE) всегда True (пропускает).
       - В канале и прочих чатах можно вернуть False.
     """
-    key = 'mention_bot'
+
+    key = "mention_bot"
 
     def __init__(self, mention_bot: bool) -> None:
         self.mention_bot = mention_bot
@@ -88,11 +92,15 @@ class MentionBotFilter(BoundFilter):
             return False
 
         except Exception as error:
-            logger.exception(f"[MentionBotFilter] Ошибка при проверке упоминания бота: {error}")
+            logger.exception(
+                f"[MentionBotFilter] Ошибка при проверке упоминания бота: {error}"
+            )
             return False
 
 
 def setup_filters(dp: Dispatcher) -> None:
     dp.filters_factory.bind(GroupAutoRegisterFilter)
     dp.filters_factory.bind(MentionBotFilter)
-    logger.info("[Filters] GroupAutoRegisterFilter и MentionBotFilter подключены.")
+    logger.info(
+        "[Filters] GroupAutoRegisterFilter и MentionBotFilter подключены."
+    )

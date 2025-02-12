@@ -22,34 +22,46 @@ def get_reminder_keyboard(language: str) -> InlineKeyboardMarkup:
         Exception: При возникновении других ошибок.
     """
     try:
-        if language not in MESSAGES['strategy_investment'] or language not in MESSAGES['improve_portfolio']:
+        if (
+            language not in MESSAGES["strategy_investment"]
+            or language not in MESSAGES["improve_portfolio"]
+        ):
             logger.error(f"Язык '{language}' не поддерживается.")
             raise ValueError(f"Unsupported language: {language}")
 
         keyboard = InlineKeyboardMarkup(row_width=1)
         keyboard.add(
             InlineKeyboardButton(
-                text=MESSAGES['strategy_investment'][language],
-                callback_data="strategy_investment"
+                text=MESSAGES["strategy_investment"][language],
+                callback_data="strategy_investment",
             ),
             InlineKeyboardButton(
-                text=MESSAGES['improve_portfolio'][language],
-                callback_data="improve_portfolio"
-            )
+                text=MESSAGES["improve_portfolio"][language],
+                callback_data="improve_portfolio",
+            ),
         )
-        logger.info(f"Клавиатура для напоминаний успешно создана для языка: {language}")
+        logger.info(
+            f"Клавиатура для напоминаний успешно создана для языка: {language}"
+        )
         return keyboard
 
     except KeyError as key_error:
-        logger.error(f"Ошибка доступа к ключу словаря сообщений для языка '{language}': {key_error}")
+        logger.error(
+            f"Ошибка доступа к ключу словаря сообщений для языка '{language}': {key_error}"
+        )
         raise
     except ValueError as value_error:
-        logger.error(f"Некорректный язык '{language}' при создании клавиатуры: {value_error}")
+        logger.error(
+            f"Некорректный язык '{language}' при создании клавиатуры: {value_error}"
+        )
         raise
     except RuntimeError as runtime_error:
-        logger.error(f"Неизвестная ошибка при создании клавиатуры для выбора языка: {runtime_error}")
+        logger.error(
+            f"Неизвестная ошибка при создании клавиатуры для выбора языка: {runtime_error}"
+        )
         raise
     except Exception as error:
-        logger.error(f"Неизвестная ошибка при создании клавиатуры для языка '{language}': {error}")
+        logger.error(
+            f"Неизвестная ошибка при создании клавиатуры для языка '{language}': {error}"
+        )
         raise
-

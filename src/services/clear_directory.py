@@ -4,6 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 async def clear_directory(directory: str) -> None:
     """
     Удаляет указанную директорию вместе со всем её содержимым.
@@ -26,13 +27,17 @@ async def clear_directory(directory: str) -> None:
                 try:
                     os.remove(file_path)
                 except OSError as e:
-                    logger.error(f"Ошибка при удалении файла {file_path}: {str(e)}")
+                    logger.error(
+                        f"Ошибка при удалении файла {file_path}: {str(e)}"
+                    )
             for d in dirs:
                 dir_path = os.path.join(root, d)
                 try:
                     os.rmdir(dir_path)
                 except OSError as e:
-                    logger.error(f"Ошибка при удалении папки {dir_path}: {str(e)}")
+                    logger.error(
+                        f"Ошибка при удалении папки {dir_path}: {str(e)}"
+                    )
         try:
             os.rmdir(directory)
         except OSError as e:

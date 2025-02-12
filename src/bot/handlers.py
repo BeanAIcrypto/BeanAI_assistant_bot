@@ -22,7 +22,7 @@ from db.dbworker import (
     update_user_language,
     get_user_limit,
     get_user_history,
-    update_dialog_score
+    update_dialog_score,
 )
 from src.bot.bot_messages import MESSAGES, MESSAGES_ERROR
 from db.background_functions import start_background_tasks
@@ -33,9 +33,9 @@ from src.services.clear_directory import clear_directory
 load_dotenv()
 
 logger = logging.getLogger(__name__)
-API_TOKEN = os.getenv('TG_TOKEN')
+API_TOKEN = os.getenv("TG_TOKEN")
 
-image_path = 'downloads/image.jpg'
+image_path = "downloads/image.jpg"
 
 
 async def on_startup(dispatcher: Dispatcher) -> None:
@@ -55,16 +55,23 @@ async def on_startup(dispatcher: Dispatcher) -> None:
     """
     try:
         asyncio.create_task(start_background_tasks(dp.bot))
-        logger.info('Фоновая задача напоминания запущена')
+        logger.info("Фоновая задача напоминания запущена")
 
         await set_default_commands(dispatcher)
         await dp.bot.delete_webhook(drop_pending_updates=True)
     except asyncio.CancelledError as cancel_error:
-        logger.error(f"Фоновая задача была отменена: {cancel_error}", exc_info=True)
+        logger.error(
+            f"Фоновая задача была отменена: {cancel_error}", exc_info=True
+        )
     except AttributeError as attr_error:
-        logger.error(f"Ошибка атрибута в on_startup: {attr_error}", exc_info=True)
+        logger.error(
+            f"Ошибка атрибута в on_startup: {attr_error}", exc_info=True
+        )
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при запуске on_startup: {str(e)}", exc_info=True)
+        logger.error(
+            f"Неизвестная ошибка при запуске on_startup: {str(e)}",
+            exc_info=True,
+        )
 
 
 async def set_default_commands(dp: Dispatcher) -> None:
@@ -80,19 +87,27 @@ async def set_default_commands(dp: Dispatcher) -> None:
         Exception: Любая другая ошибка.
     """
     try:
-        await dp.bot.set_my_commands([
-            types.BotCommand("donate", "Donate/ Оформить донат")
-        ])
+        await dp.bot.set_my_commands(
+            [types.BotCommand("donate", "Donate/ Оформить донат")]
+        )
         logger.info("Команды бота успешно установлены")
     except ConnectionError as conn_error:
-        logger.error(f"Ошибка подключения при установке команд: {conn_error}", exc_info=True)
+        logger.error(
+            f"Ошибка подключения при установке команд: {conn_error}",
+            exc_info=True,
+        )
     except ValueError as value_error:
-        logger.error(f"Неверное значение при установке команд: {value_error}", exc_info=True)
+        logger.error(
+            f"Неверное значение при установке команд: {value_error}",
+            exc_info=True,
+        )
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при установке команд: {str(e)}", exc_info=True)
+        logger.error(
+            f"Неизвестная ошибка при установке команд: {str(e)}", exc_info=True
+        )
 
 
-@dp.message_handler(commands=['start'], mention_bot=True)
+@dp.message_handler(commands=["start"], mention_bot=True)
 async def start(message: types.Message) -> None:
     """
     Обрабатывает команду /start:
@@ -111,21 +126,37 @@ async def start(message: types.Message) -> None:
 
     try:
         create_user(user_id, user_name)
-        logger.info(f"Пользователь {user_name} (ID: {user_id}) добавлен в базу данных")
+        logger.info(
+            f"Пользователь {user_name} (ID: {user_id}) добавлен в базу данных"
+        )
 
-        await message.reply(MESSAGES["handle_language_choice_first_message"]["en"])
-        logger.info(f"Пользователь получил привественное сообщение: {user_name}")
+        await message.reply(
+            MESSAGES["handle_language_choice_first_message"]["en"]
+        )
+        logger.info(
+            f"Пользователь получил привественное сообщение: {user_name}"
+        )
 
-        await analytics_creating_target(user_id, user_name, target_start_id=os.getenv("TARGET_START_ID_START"))
+        await analytics_creating_target(
+            user_id,
+            user_name,
+            target_start_id=os.getenv("TARGET_START_ID_START"),
+        )
     except psycopg2.Error as db_error:
-        logger.error(f"Ошибка базы данных при обработке команды /start: {db_error}", exc_info=True)
-        await message.reply(MESSAGES['start_error'])
+        logger.error(
+            f"Ошибка базы данных при обработке команды /start: {db_error}",
+            exc_info=True,
+        )
+        await message.reply(MESSAGES["start_error"])
     except Exception as e:
-        logger.error(f"Неизвестная ошибка в обработчике команды /start: {e}", exc_info=True)
-        await message.reply(MESSAGES['start_error'])
+        logger.error(
+            f"Неизвестная ошибка в обработчике команды /start: {e}",
+            exc_info=True,
+        )
+        await message.reply(MESSAGES["start_error"])
 
 
-@dp.message_handler(commands=['donate'], auto_group=True, mention_bot=True)
+@dp.message_handler(commands=["donate"], auto_group=True, mention_bot=True)
 async def donate(message: types.Message) -> None:
     """
     Обрабатывает команду /donate, отправляя пользователю ссылку на оплату.
@@ -143,26 +174,39 @@ async def donate(message: types.Message) -> None:
 
     try:
 
-        await message.answer(
-            MESSAGES["donate"]["en"],
-            parse_mode="MarkdownV2"
+        await message.answer(MESSAGES["donate"]["en"], parse_mode="MarkdownV2")
+        logger.info(
+            f"Ссылка на оплату отправлена пользователю {user_name} (ID: {user_id})"
         )
-        logger.info(f"Ссылка на оплату отправлена пользователю {user_name} (ID: {user_id})")
 
     except KeyError as ke:
-        logger.error(f"Ошибка языка для пользователя {user_name} (ID: {user_id}): {str(ke)}")
-        await message.answer(MESSAGES_ERROR["donate_handler_error_language_not_set"]["en"])
+        logger.error(
+            f"Ошибка языка для пользователя {user_name} (ID: {user_id}): {str(ke)}"
+        )
+        await message.answer(
+            MESSAGES_ERROR["donate_handler_error_language_not_set"]["en"]
+        )
 
     except ValueError as ve:
-        logger.error(f"Неподдерживаемый язык для пользователя {user_name} (ID: {user_id}): {str(ve)}")
-        await message.answer(MESSAGES_ERROR["donate_handler_error_language_not_supported"]["en"])
+        logger.error(
+            f"Неподдерживаемый язык для пользователя {user_name} (ID: {user_id}): {str(ve)}"
+        )
+        await message.answer(
+            MESSAGES_ERROR["donate_handler_error_language_not_supported"]["en"]
+        )
 
     except Exception as e:
-        logger.error(f"Неизвестная ошибка в обработчике команды /donate для {user_name} (ID: {user_id}): {str(e)}")
-        await message.answer(MESSAGES_ERROR["donate_handler_unknown_error"]["en"])
+        logger.error(
+            f"Неизвестная ошибка в обработчике команды /donate для {user_name} (ID: {user_id}): {str(e)}"
+        )
+        await message.answer(
+            MESSAGES_ERROR["donate_handler_unknown_error"]["en"]
+        )
 
 
-@dp.message_handler(auto_group=True, mention_bot=True, content_types=ContentType.VOICE)
+@dp.message_handler(
+    auto_group=True, mention_bot=True, content_types=ContentType.VOICE
+)
 async def voice(message: types.Message) -> None:
     """
     Обрабатывает голосовые сообщения:
@@ -190,27 +234,40 @@ async def voice(message: types.Message) -> None:
         if not text:
             raise ValueError("Ошибка транскрибации голосового сообщения")
 
-        logger.info(f"Пользователь {user_name} (ID: {user_id}) отправил голосовое сообщение: {text}")
+        logger.info(
+            f"Пользователь {user_name} (ID: {user_id}) отправил голосовое сообщение: {text}"
+        )
 
         await process_user_message(
             user_id=user_id,
             chat_id=chat_id,
             text=text,
             history=history,
-            prompt='text_voice',
+            prompt="text_voice",
             bot=bot,
-            message=message
+            message=message,
         )
     except ValueError as value_error:
-        logger.error(f"Ошибка обработки голосового сообщения: {value_error}", exc_info=True)
+        logger.error(
+            f"Ошибка обработки голосового сообщения: {value_error}",
+            exc_info=True,
+        )
         await message.reply(MESSAGES_ERROR["voice_error"]["en"])
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при обработке голосового сообщения: {e}", exc_info=True)
+        logger.error(
+            f"Неизвестная ошибка при обработке голосового сообщения: {e}",
+            exc_info=True,
+        )
         await message.reply(MESSAGES_ERROR["voice_error"]["en"])
 
 
-@dp.message_handler(lambda message: re.search(
-    r'https:\/\/(www\.)?(youtube\.com|youtu\.be)\/[^\s]+', message.text), auto_group=True, mention_bot=True)
+@dp.message_handler(
+    lambda message: re.search(
+        r"https:\/\/(www\.)?(youtube\.com|youtu\.be)\/[^\s]+", message.text
+    ),
+    auto_group=True,
+    mention_bot=True,
+)
 async def you_tube_link_handler(message: types.Message) -> None:
     """
     Обрабатывает сообщения с ссылками на YouTube:
@@ -236,21 +293,27 @@ async def you_tube_link_handler(message: types.Message) -> None:
 
         you_tube_status = get_user_status_you_tube(user_id)
         if int(you_tube_status) == 1:
-            await message.answer(MESSAGES['status_you_tube']["en"])
+            await message.answer(MESSAGES["status_you_tube"]["en"])
             return
         update_status_you_tube(user_id, status=1)
 
-        url_match = re.search(r'https:\/\/(www\.)?(youtube\.com|youtu\.be)\/[^\s]+', text)
+        url_match = re.search(
+            r"https:\/\/(www\.)?(youtube\.com|youtu\.be)\/[^\s]+", text
+        )
         if url_match:
             url = url_match.group(0)
         else:
             raise ValueError("Не удалось найти YouTube ссылку в тексте")
 
-        logger.info(f"Получена ссылка: {url} от пользователя {user_name} (ID: {user_id})")
+        logger.info(
+            f"Получена ссылка: {url} от пользователя {user_name} (ID: {user_id})"
+        )
 
         history = get_user_history(user_id)
 
-        awaiting_message = await message.answer(MESSAGES["link_handler_await"]["en"])
+        awaiting_message = await message.answer(
+            MESSAGES["link_handler_await"]["en"]
+        )
 
         link_text = await you_tube_link_processing(url, user_id, message, bot)
         if not link_text:
@@ -264,25 +327,34 @@ async def you_tube_link_handler(message: types.Message) -> None:
             chat_id=chat_id,
             text=question,
             history=history,
-            prompt='you_tube_link',
+            prompt="you_tube_link",
             bot=bot,
             data_from_question=[text, url],
-            message=message
+            message=message,
         )
         await awaiting_message.delete()
 
         update_status_you_tube(user_id, status=0)
     except ValueError as value_error:
-        logger.error(f"Ошибка обработки YouTube ссылки: {value_error}", exc_info=True)
+        logger.error(
+            f"Ошибка обработки YouTube ссылки: {value_error}", exc_info=True
+        )
         await message.reply(MESSAGES_ERROR["YouTube_link_handler_error"]["en"])
         update_status_you_tube(user_id, status=0)
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при обработке YouTube ссылки: {e}", exc_info=True)
+        logger.error(
+            f"Неизвестная ошибка при обработке YouTube ссылки: {e}",
+            exc_info=True,
+        )
         await message.reply(MESSAGES_ERROR["YouTube_link_handler_error"]["en"])
         update_status_you_tube(user_id, status=0)
 
 
-@dp.message_handler(lambda message: re.search(r'https?:\/\/[^\s]+', message.text), auto_group=True, mention_bot=True)
+@dp.message_handler(
+    lambda message: re.search(r"https?:\/\/[^\s]+", message.text),
+    auto_group=True,
+    mention_bot=True,
+)
 async def link_handler(message: types.Message) -> None:
     """
     Обрабатывает сообщения с ссылками:
@@ -306,17 +378,21 @@ async def link_handler(message: types.Message) -> None:
         if not await limit_check(limit, message, user_id, user_name):
             return
 
-        url_match = re.search(r'https?:\/\/[^\s]+', text)
+        url_match = re.search(r"https?:\/\/[^\s]+", text)
         if url_match:
             url = url_match.group(0)
         else:
             raise ValueError("Не удалось найти ссылку в тексте")
 
-        logger.info(f"Получена ссылка: {url} от пользователя {user_name} (ID: {user_id})")
+        logger.info(
+            f"Получена ссылка: {url} от пользователя {user_name} (ID: {user_id})"
+        )
 
         history = get_user_history(user_id)
 
-        awaiting_message = await message.answer(MESSAGES["link_handler_await"]["en"])
+        awaiting_message = await message.answer(
+            MESSAGES["link_handler_await"]["en"]
+        )
 
         link_text = await link_processing(url)
         if not link_text:
@@ -330,21 +406,25 @@ async def link_handler(message: types.Message) -> None:
             chat_id=chat_id,
             text=question,
             history=history,
-            prompt='link',
+            prompt="link",
             bot=bot,
             data_from_question=[text, url],
-            message=message
+            message=message,
         )
         await awaiting_message.delete()
     except ValueError as value_error:
         logger.error(f"Ошибка обработки ссылки: {value_error}", exc_info=True)
         await message.reply(MESSAGES_ERROR["link_handler_error"]["en"])
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при обработке ссылки: {e}", exc_info=True)
+        logger.error(
+            f"Неизвестная ошибка при обработке ссылки: {e}", exc_info=True
+        )
         await message.reply(MESSAGES_ERROR["link_handler_error"]["en"])
 
 
-@dp.message_handler(auto_group=True, mention_bot=True, content_types=types.ContentTypes.TEXT)
+@dp.message_handler(
+    auto_group=True, mention_bot=True, content_types=types.ContentTypes.TEXT
+)
 async def text_handler(message: types.Message) -> None:
     """
     Обрабатывает текстовые сообщения:
@@ -369,26 +449,36 @@ async def text_handler(message: types.Message) -> None:
         if not await limit_check(limit, message, user_id, user_name):
             return
 
-        logger.info(f"Пользователь {user_name} (ID: {user_id}) отправил текстовое сообщение: {text}")
+        logger.info(
+            f"Пользователь {user_name} (ID: {user_id}) отправил текстовое сообщение: {text}"
+        )
 
         await process_user_message(
             user_id=user_id,
             chat_id=chat_id,
             text=text,
             history=history,
-            prompt='text_voice',
+            prompt="text_voice",
             bot=bot,
-            message=message
+            message=message,
         )
     except ValueError as value_error:
-        logger.error(f"Ошибка обработки текстового сообщения: {value_error}", exc_info=True)
+        logger.error(
+            f"Ошибка обработки текстового сообщения: {value_error}",
+            exc_info=True,
+        )
         await message.reply(MESSAGES_ERROR["text_error"]["en"])
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при обработке текстового сообщения: {e}", exc_info=True)
+        logger.error(
+            f"Неизвестная ошибка при обработке текстового сообщения: {e}",
+            exc_info=True,
+        )
         await message.reply(MESSAGES_ERROR["text_error"]["en"])
 
 
-@dp.message_handler(auto_group=True, mention_bot=True, content_types=ContentType.DOCUMENT)
+@dp.message_handler(
+    auto_group=True, mention_bot=True, content_types=ContentType.DOCUMENT
+)
 async def document_handler(message: types.Message) -> None:
     """
     Обрабатывает загруженные документы:
@@ -424,15 +514,23 @@ async def document_handler(message: types.Message) -> None:
         if not await limit_check(limit, message, user_id, user_name):
             return
 
-        text_extraction_function = text_extraction_from_a_document.get(document.mime_type)
+        text_extraction_function = text_extraction_from_a_document.get(
+            document.mime_type
+        )
         if not text_extraction_function:
-            await message.answer(MESSAGES_ERROR['document_handler_error_type_document']["en"])
+            await message.answer(
+                MESSAGES_ERROR["document_handler_error_type_document"]["en"]
+            )
 
         text_document = text_extraction_function(file_path)
         if not text_document:
-            await message.answer(MESSAGES_ERROR['document_handler_error_none_document']["en"])
+            await message.answer(
+                MESSAGES_ERROR["document_handler_error_none_document"]["en"]
+            )
 
-        logger.info(f"Из файла {file_name} извлечен текст: {text_document[:1000]}")
+        logger.info(
+            f"Из файла {file_name} извлечен текст: {text_document[:1000]}"
+        )
 
         question = f'Содержание документа "{file_name}":\n{text_document}'
         history = get_user_history(user_id)
@@ -442,26 +540,34 @@ async def document_handler(message: types.Message) -> None:
             chat_id=chat_id,
             text=question,
             history=history,
-            prompt='document',
+            prompt="document",
             bot=bot,
             data_from_question=[question, file_name],
-            message=message
+            message=message,
         )
         logger.info(f"Файл {file_name} был удален после обработки.")
     except FileNotFoundError as file_error:
         logger.error(f"Файл документа не найден: {file_error}", exc_info=True)
-        await message.reply(MESSAGES_ERROR["document_handler_file_not_found"]["en"])
+        await message.reply(
+            MESSAGES_ERROR["document_handler_file_not_found"]["en"]
+        )
     except ValueError as value_error:
-        logger.error(f"Ошибка обработки документа: {value_error}", exc_info=True)
+        logger.error(
+            f"Ошибка обработки документа: {value_error}", exc_info=True
+        )
         await message.reply(MESSAGES_ERROR["document_handler_error"]["en"])
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при обработке документа: {e}", exc_info=True)
+        logger.error(
+            f"Неизвестная ошибка при обработке документа: {e}", exc_info=True
+        )
         await message.reply(MESSAGES_ERROR["document_handler_error"]["en"])
     finally:
         await clear_directory(base_dir)
 
 
-@dp.message_handler(content_types=ContentTypes.PHOTO, mention_bot=True, auto_group=True)
+@dp.message_handler(
+    content_types=ContentTypes.PHOTO, mention_bot=True, auto_group=True
+)
 async def handle_photo(message: types.Message) -> None:
     """
     Обрабатывает фотографии:
@@ -483,14 +589,14 @@ async def handle_photo(message: types.Message) -> None:
         photo = message.photo[-1]
         file_info = await bot.get_file(photo.file_id)
         file_path = file_info.file_path
-        file_url = f'https://api.telegram.org/file/bot{API_TOKEN}/{file_path}'
+        file_url = f"https://api.telegram.org/file/bot{API_TOKEN}/{file_path}"
         logger.info(f"Фотография загружена: {file_url}")
 
         limit = get_user_limit(user_id)
         if not await limit_check(limit, message, user_id, user_name):
             return
 
-        question = f'Ссылка на изображение: {file_url}'
+        question = f"Ссылка на изображение: {file_url}"
         history = get_user_history(user_id)
 
         await process_user_message(
@@ -498,23 +604,33 @@ async def handle_photo(message: types.Message) -> None:
             chat_id=chat_id,
             text=question,
             history=history,
-            prompt='image',
+            prompt="image",
             bot=bot,
             message=message,
-            file_url=file_url
+            file_url=file_url,
         )
     except FileNotFoundError as file_error:
-        logger.error(f"Файл изображения не найден: {file_error}", exc_info=True)
-        await message.reply(MESSAGES_ERROR["photo_handler_file_not_found"]["en"])
+        logger.error(
+            f"Файл изображения не найден: {file_error}", exc_info=True
+        )
+        await message.reply(
+            MESSAGES_ERROR["photo_handler_file_not_found"]["en"]
+        )
     except ValueError as value_error:
-        logger.error(f"Ошибка обработки изображения: {value_error}", exc_info=True)
+        logger.error(
+            f"Ошибка обработки изображения: {value_error}", exc_info=True
+        )
         await message.reply(MESSAGES_ERROR["photo_handler_error"]["en"])
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при обработке изображения: {e}", exc_info=True)
+        logger.error(
+            f"Неизвестная ошибка при обработке изображения: {e}", exc_info=True
+        )
         await message.reply(MESSAGES_ERROR["photo_handler_error"]["en"])
 
 
-@dp.message_handler(auto_group=True, mention_bot=True, content_types=ContentTypes.ANY)
+@dp.message_handler(
+    auto_group=True, mention_bot=True, content_types=ContentTypes.ANY
+)
 async def all_updates_handler(message: types.Message) -> None:
     """
     Обрабатывает неизвестные типы сообщений для обученных пользователей.
@@ -534,16 +650,26 @@ async def all_updates_handler(message: types.Message) -> None:
         )
 
         await message.answer(MESSAGES["all_updates_handler"]["en"])
-        logger.info(f"Ответ на неизвестный тип сообщения отправлен пользователю {user_name} (ID: {user_id}).")
+        logger.info(
+            f"Ответ на неизвестный тип сообщения отправлен пользователю {user_name} (ID: {user_id})."
+        )
     except ValueError as ve:
-        logger.error(f"Ошибка определения языка для пользователя {user_id}: {ve}", exc_info=True)
+        logger.error(
+            f"Ошибка определения языка для пользователя {user_id}: {ve}",
+            exc_info=True,
+        )
         await message.reply(MESSAGES_ERROR["all_updates_handler_error"]["en"])
     except Exception as e:
-        logger.error(f"Ошибка в обработчике неизвестных сообщений для пользователя {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"Ошибка в обработчике неизвестных сообщений для пользователя {user_id}: {e}",
+            exc_info=True,
+        )
         await message.reply(MESSAGES_ERROR["all_updates_handler_error"]["en"])
 
 
-@dp.callback_query_handler(lambda c: c.data.startswith("rate_"), mention_bot=True)
+@dp.callback_query_handler(
+    lambda c: c.data.startswith("rate_"), mention_bot=True
+)
 async def process_callback_rating(callback_query: types.CallbackQuery) -> None:
     """
     Обрабатывает колбэк-оценки.
@@ -563,19 +689,25 @@ async def process_callback_rating(callback_query: types.CallbackQuery) -> None:
 
         data = callback_query.data.split("_")
         if len(data) != 3:
-            raise ValueError(f"Некорректный формат данных колбэка: {callback_query.data}")
+            raise ValueError(
+                f"Некорректный формат данных колбэка: {callback_query.data}"
+            )
 
         rating = str(data[1])
         response_id = int(data[2])
 
-        logger.info(f"Пользователь {user_name} (ID: {user_id}) выбрал оценку: {rating} для ответа {response_id}")
+        logger.info(
+            f"Пользователь {user_name} (ID: {user_id}) выбрал оценку: {rating} для ответа {response_id}"
+        )
 
-        await bot.send_message(user_id, MESSAGES["process_callback_rating"]["en"])
+        await bot.send_message(
+            user_id, MESSAGES["process_callback_rating"]["en"]
+        )
 
         await bot.edit_message_reply_markup(
             callback_query.message.chat.id,
             callback_query.message.message_id,
-            reply_markup=None
+            reply_markup=None,
         )
 
         update_dialog_score(rating, response_id)
@@ -586,17 +718,28 @@ async def process_callback_rating(callback_query: types.CallbackQuery) -> None:
         await bot.answer_callback_query(callback_query.id)
 
     except ValueError as ve:
-        logger.error(f"Ошибка разбора данных колбэка для пользователя {user_name} (ID: {user_id}): {ve}")
-        await bot.send_message(user_id, MESSAGES_ERROR["process_callback_rating_error"]["en"])
+        logger.error(
+            f"Ошибка разбора данных колбэка для пользователя {user_name} (ID: {user_id}): {ve}"
+        )
+        await bot.send_message(
+            user_id, MESSAGES_ERROR["process_callback_rating_error"]["en"]
+        )
     except KeyError as ke:
         logger.error(str(ke))
         await bot.send_message(user_id, MESSAGES["start"])
     except Exception as e:
-        logger.error(f"Ошибка при обработке колбэка оценки для пользователя {user_name} (ID: {user_id}): {str(e)}")
-        await bot.send_message(user_id, MESSAGES_ERROR["process_callback_rating_error"]["en"])
+        logger.error(
+            f"Ошибка при обработке колбэка оценки для пользователя {user_name} (ID: {user_id}): {str(e)}"
+        )
+        await bot.send_message(
+            user_id, MESSAGES_ERROR["process_callback_rating_error"]["en"]
+        )
 
 
-@dp.callback_query_handler(lambda c: c.data in ["strategy_investment", "improve_portfolio"], mention_bot=True)
+@dp.callback_query_handler(
+    lambda c: c.data in ["strategy_investment", "improve_portfolio"],
+    mention_bot=True,
+)
 async def process_callback_button(callback_query: types.CallbackQuery) -> None:
     """
     Обрабатывает выбор стратегии через callback-кнопки.
@@ -613,15 +756,15 @@ async def process_callback_button(callback_query: types.CallbackQuery) -> None:
         if callback_query.data == "strategy_investment":
             await bot.send_message(
                 user_id,
-                MESSAGES['process_callback_button_strategy_investment']["en"],
-                parse_mode="MarkdownV2"
+                MESSAGES["process_callback_button_strategy_investment"]["en"],
+                parse_mode="MarkdownV2",
             )
             logger.info(f"Пользователь {user_id} выбрал стратегию инвестиций.")
         elif callback_query.data == "improve_portfolio":
             await bot.send_message(
                 user_id,
-                MESSAGES['process_callback_button_improve_portfolio']["en"],
-                parse_mode="MarkdownV2"
+                MESSAGES["process_callback_button_improve_portfolio"]["en"],
+                parse_mode="MarkdownV2",
             )
             logger.info(f"Пользователь {user_id} выбрал улучшение портфолио.")
 
@@ -629,10 +772,17 @@ async def process_callback_button(callback_query: types.CallbackQuery) -> None:
 
     except KeyError as ke:
         logger.error(f"Ошибка доступа к сообщениям: {ke}", exc_info=True)
-        await bot.send_message(user_id, MESSAGES_ERROR["process_callback_button_error"]["en"])
+        await bot.send_message(
+            user_id, MESSAGES_ERROR["process_callback_button_error"]["en"]
+        )
     except Exception as e:
-        logger.error(f"Ошибка обработки кнопки стратегии для пользователя {user_id}: {str(e)}", exc_info=True)
-        await bot.send_message(user_id, MESSAGES_ERROR["process_callback_button_error"]["en"])
+        logger.error(
+            f"Ошибка обработки кнопки стратегии для пользователя {user_id}: {str(e)}",
+            exc_info=True,
+        )
+        await bot.send_message(
+            user_id, MESSAGES_ERROR["process_callback_button_error"]["en"]
+        )
 
 
 @dp.my_chat_member_handler()
@@ -650,11 +800,28 @@ async def handle_chat_member_update(update: types.ChatMemberUpdated) -> None:
     user_name = update.from_user.first_name or "Unknown"
 
     try:
-        if update.new_chat_member.status == 'kicked':
-            await analytics_creating_target(user_id, user_name, target_start_id=os.getenv("TARGET_START_ID_BLOCK"), value=None, unit=None)
-            logger.info(f"Пользователь {user_id} ({user_name}) заблокировал бота.")
-        elif update.new_chat_member.status == 'left':
-            await analytics_creating_target(user_id, user_name, target_start_id=os.getenv("TARGET_START_ID_BLOCK"), value=None, unit=None)
+        if update.new_chat_member.status == "kicked":
+            await analytics_creating_target(
+                user_id,
+                user_name,
+                target_start_id=os.getenv("TARGET_START_ID_BLOCK"),
+                value=None,
+                unit=None,
+            )
+            logger.info(
+                f"Пользователь {user_id} ({user_name}) заблокировал бота."
+            )
+        elif update.new_chat_member.status == "left":
+            await analytics_creating_target(
+                user_id,
+                user_name,
+                target_start_id=os.getenv("TARGET_START_ID_BLOCK"),
+                value=None,
+                unit=None,
+            )
             logger.info(f"Пользователь {user_id} ({user_name}) удалил бота.")
     except Exception as e:
-        logger.error(f"Ошибка обработки обновлений статуса чата для пользователя {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"Ошибка обработки обновлений статуса чата для пользователя {user_id}: {e}",
+            exc_info=True,
+        )

@@ -36,28 +36,22 @@ logger = logging.getLogger(__name__)
 API_KEY: str = os.getenv("GPT_SECRET_KEY_FASOLKAAI", "")
 GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
 SEARCH_ENGINE_ID: str = os.getenv("SEARCH_ENGINE_GLOBAL_ID", "")
-MODEL_NAME: str =  os.getenv("MODEL_NAME", "")
-MODEL_NAME_MEM: str =  os.getenv("MODEL_NAME_MEM", "")
+MODEL_NAME: str = os.getenv("MODEL_NAME", "")
+MODEL_NAME_MEM: str = os.getenv("MODEL_NAME_MEM", "")
 FAISS_INDEX_PATH: str = "faiss_index_RU"
 
 if not API_KEY:
     raise ValueError("API-ключ OpenAI не найден. Проверьте файл .env.")
 
 embeddings = OpenAIEmbeddings(
-    openai_api_key=API_KEY,
-    model="text-embedding-ada-002"
+    openai_api_key=API_KEY, model="text-embedding-ada-002"
 )
 
 try:
     retriever = FAISS.load_local(
-        "faiss_index_RU",
-        embeddings,
-        allow_dangerous_deserialization=True
+        "faiss_index_RU", embeddings, allow_dangerous_deserialization=True
     ).as_retriever(
-        k=4,
-        search_type="similarity",
-        search_kwargs={'k': 6},
-        fetch_k=50
+        k=4, search_type="similarity", search_kwargs={"k": 6}, fetch_k=50
     )
     logger.info("FAISS индекс успешно загружен.")
 except Exception as e:
@@ -71,7 +65,7 @@ try:
         temperature=0.7,
         top_p=0.9,
         frequency_penalty=0.5,
-        presence_penalty=0.6
+        presence_penalty=0.6,
     )
     llm_mem = ChatOpenAI(
         api_key=API_KEY,
@@ -79,14 +73,19 @@ try:
         temperature=0.5,
         top_p=0.9,
         frequency_penalty=0.5,
-        presence_penalty=0.6
+        presence_penalty=0.6,
     )
     logger.info("ChatOpenAI успешно инициализирован.")
 except Exception as e:
     logger.error(f"Ошибка инициализации модели: {e}")
-    raise ValueError("Не удалось инициализировать ChatOpenAI. Проверьте API-ключ.")
+    raise ValueError(
+        "Не удалось инициализировать ChatOpenAI. Проверьте API-ключ."
+    )
 
-google_search = GoogleSearchAPIWrapper(api_key=GOOGLE_API_KEY, search_engine_id=SEARCH_ENGINE_ID)
+google_search = GoogleSearchAPIWrapper(
+    api_key=GOOGLE_API_KEY, search_engine_id=SEARCH_ENGINE_ID
+)
+
 
 def reformulate_response(response_text: str, user_id: int) -> str:
     """
@@ -106,15 +105,19 @@ def reformulate_response(response_text: str, user_id: int) -> str:
     try:
         reformulate_messages = [
             SystemMessage(content=PROMTS["mem_prompt"]["en"]),
-            HumanMessage(content=f"Ответ: {response_text}\nПереформулируй:")
+            HumanMessage(content=f"Ответ: {response_text}\nПереформулируй:"),
         ]
 
         reformulated_response = llm_mem(reformulate_messages).content.strip()
 
-        total_tokens_reformulate = count_output_tokens(reformulated_response, model="gpt-4o")
+        total_tokens_reformulate = count_output_tokens(
+            reformulated_response, model="gpt-4o"
+        )
         limit = get_user_limit(user_id)
         if limit - total_tokens_reformulate < 0:
-            raise ValueError("Недостаточно токенов для выполнения переформулировки.")
+            raise ValueError(
+                "Недостаточно токенов для выполнения переформулировки."
+            )
 
         new_limit = limit - total_tokens_reformulate
         update_user_limit(user_id, new_limit)
@@ -124,7 +127,9 @@ def reformulate_response(response_text: str, user_id: int) -> str:
         return reformulated_response
 
     except Exception as e:
-        logger.error(f"Ошибка при переформулировке ответа для пользователя {user_id}: {e}")
+        logger.error(
+            f"Ошибка при переформулировке ответа для пользователя {user_id}: {e}"
+        )
         raise ValueError("Ошибка при переформулировке ответа.")
 
 
@@ -172,17 +177,19 @@ tools = [
     Tool(
         name="Knowledge Base",
         func=knowledge_base_search,
-        description="Используется для ответов на вопросы на основе внутренней базы знаний."
+        description="Используется для ответов на вопросы на основе внутренней базы знаний.",
     ),
     Tool(
         name="Google Search",
         func=google_search.run,
-        description="Используется для поиска дополнительной информации через Google."
-    )
+        description="Используется для поиска дополнительной информации через Google.",
+    ),
 ]
 
 
-def create_agent(prompt_text: str, history: Optional[List[Dict[str, str]]] = None):
+def create_agent(
+    prompt_text: str, history: Optional[List[Dict[str, str]]] = None
+):
     """
     Создание агента для обработки запросов.
 
@@ -198,7 +205,9 @@ def create_agent(prompt_text: str, history: Optional[List[Dict[str, str]]] = Non
         RuntimeError: Ошибка инициализации агента.
     """
     try:
-        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        memory = ConversationBufferMemory(
+            memory_key="chat_history", return_messages=True
+        )
         memory.clear()
 
         if prompt_text:
@@ -209,10 +218,16 @@ def create_agent(prompt_text: str, history: Optional[List[Dict[str, str]]] = Non
         if history:
             for entry in history:
                 if "question" in entry and "response" in entry:
-                    memory.chat_memory.messages.append(HumanMessage(content=entry['question']))
-                    memory.chat_memory.messages.append(AIMessage(content=entry['response']))
+                    memory.chat_memory.messages.append(
+                        HumanMessage(content=entry["question"])
+                    )
+                    memory.chat_memory.messages.append(
+                        AIMessage(content=entry["response"])
+                    )
                 else:
-                    logger.warning(f"Пропущена некорректная запись истории: {entry}")
+                    logger.warning(
+                        f"Пропущена некорректная запись истории: {entry}"
+                    )
 
         agent = initialize_agent(
             tools=tools,
@@ -221,9 +236,7 @@ def create_agent(prompt_text: str, history: Optional[List[Dict[str, str]]] = Non
             memory=memory,
             verbose=True,
             handle_parsing_errors=True,
-            agent_kwargs={
-                "system_message": prompt_text
-            }
+            agent_kwargs={"system_message": prompt_text},
         )
         logger.info("Агент успешно создан.")
         return agent
@@ -257,26 +270,28 @@ async def fix_user_query(user_query: str, user_id: int) -> str:
     try:
         limit = get_user_limit(user_id)
         messages = [
-            SystemMessage(content=PROMTS['fix_user_input']["en"]),
-            HumanMessage(content=f"**Вход:** {user_query}\n**Выход:**")
+            SystemMessage(content=PROMTS["fix_user_input"]["en"]),
+            HumanMessage(content=f"**Вход:** {user_query}\n**Выход:**"),
         ]
 
         total_tokens_input = count_input_tokens(
             history=[],
             user_input=user_query,
-            prompt=PROMTS['fix_user_input']["en"],
-            model="gpt-4"
+            prompt=PROMTS["fix_user_input"]["en"],
+            model="gpt-4",
         )
         logger.info(f"Количество входных токенов: {total_tokens_input}")
 
         response = llm(messages)
         corrected_text = response.content.strip()
 
-        total_tokens_output = count_output_tokens(corrected_text, model="gpt-4")
+        total_tokens_output = count_output_tokens(
+            corrected_text, model="gpt-4"
+        )
         logger.info(f"Количество выходных токенов: {total_tokens_output}")
 
         total_tokens = total_tokens_input + total_tokens_output
-        update_user_limit(user_id, limit-total_tokens)
+        update_user_limit(user_id, limit - total_tokens)
         logger.info(f"Общее количество токенов: {total_tokens}")
         logger.info(f"Исправленный запрос пользователя: {corrected_text}")
         return corrected_text
@@ -289,14 +304,16 @@ async def fix_user_query(user_query: str, user_id: int) -> str:
         raise
     except Exception as e:
         logger.error(f"Ошибка при взаимодействии с LLM: {e}")
-        raise RuntimeError(f"Ошибка при взаимодействии с языковой моделью: {e}")
+        raise RuntimeError(
+            f"Ошибка при взаимодействии с языковой моделью: {e}"
+        )
 
 
 async def run_agent(
     user_id: int,
     user_input: str,
     history: List[Dict[str, str]],
-    prompt_text: str
+    prompt_text: str,
 ) -> Union[str, Tuple[None, str]]:
     """
     Запуск агента для обработки пользовательского ввода.
@@ -318,7 +335,9 @@ async def run_agent(
     try:
         fix_user_input = await fix_user_query(user_input, user_id)
         limit = get_user_limit(user_id)
-        total_tokens_input = count_input_tokens(history, fix_user_input, prompt_text, model=MODEL_NAME)
+        total_tokens_input = count_input_tokens(
+            history, fix_user_input, prompt_text, model=MODEL_NAME
+        )
 
         if limit - total_tokens_input <= 0:
             logger.warning(f"Пользователь {user_id} превысил лимит токенов.")
@@ -326,10 +345,14 @@ async def run_agent(
 
         agent = create_agent(prompt_text, history)
         loop = asyncio.get_event_loop()
-        response = await loop.run_in_executor(None, agent.invoke, fix_user_input)
+        response = await loop.run_in_executor(
+            None, agent.invoke, fix_user_input
+        )
         refined_response = response["output"]
 
-        total_tokens_response = count_output_tokens(str(response), model=MODEL_NAME)
+        total_tokens_response = count_output_tokens(
+            str(response), model=MODEL_NAME
+        )
         total_tokens_used = total_tokens_input + total_tokens_response
 
         update_user_limit(user_id, limit - total_tokens_used)
@@ -340,10 +363,14 @@ async def run_agent(
         logger.error(f"Некорректный ввод пользователя {user_id}: {e}")
         return "Ошибка обработки вашего запроса. Попробуйте уточнить ввод."
     except ConnectionError as e:
-        logger.error(f"Ошибка подключения к модели для пользователя {user_id}: {e}")
+        logger.error(
+            f"Ошибка подключения к модели для пользователя {user_id}: {e}"
+        )
         return "Не удалось подключиться к модели. Повторите попытку позже."
     except RuntimeError as e:
-        logger.error(f"Ошибка выполнения агента для пользователя {user_id}: {e}")
+        logger.error(
+            f"Ошибка выполнения агента для пользователя {user_id}: {e}"
+        )
         return "Произошла внутренняя ошибка при обработке запроса."
     except BadRequestError as e:
         logger.error(f"Ошибка агента для пользователя {user_id}: {e}")
@@ -352,11 +379,15 @@ async def run_agent(
         logger.error(f"Ошибка большого количества запросов за раз: {e}")
         return "Вы слишком часто задаёте вопрос. Пожалуйста, попробуйте позже."
     except Exception as e:
-        logger.error(f"Непредвиденная ошибка при обработке запроса для пользователя {user_id}: {e}")
+        logger.error(
+            f"Непредвиденная ошибка при обработке запроса для пользователя {user_id}: {e}"
+        )
         return MESSAGES["error_processing"]["en"]
 
 
-async def get_context_retriever_chain(llm_2: ChatOpenAI, prompt_text: str) -> Any:
+async def get_context_retriever_chain(
+    llm_2: ChatOpenAI, prompt_text: str
+) -> Any:
     """
     Создание цепочки для поиска контекста.
 
@@ -373,30 +404,34 @@ async def get_context_retriever_chain(llm_2: ChatOpenAI, prompt_text: str) -> An
         Exception: Любая другая ошибка.
     """
     try:
-        prompt = ChatPromptTemplate.from_messages([
-            MessagesPlaceholder(variable_name="history"),
-            SystemMessagePromptTemplate.from_template(prompt_text),
-            HumanMessagePromptTemplate.from_template("{input}"),
-            HumanMessagePromptTemplate.from_template(
-                "Учитывая приведенный выше разговор, составь поисковый запрос, чтобы получить информацию, относящуюся к этому разговору"
-            ),
-        ])
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                MessagesPlaceholder(variable_name="history"),
+                SystemMessagePromptTemplate.from_template(prompt_text),
+                HumanMessagePromptTemplate.from_template("{input}"),
+                HumanMessagePromptTemplate.from_template(
+                    "Учитывая приведенный выше разговор, составь поисковый запрос, чтобы получить информацию, относящуюся к этому разговору"
+                ),
+            ]
+        )
         return create_history_aware_retriever(llm_2, retriever, prompt)
     except ValueError as e:
         logger.error(f"Ошибка параметров шаблона для контекста: {str(e)}")
         raise
     except RuntimeError as e:
-        logger.error(f"Ошибка выполнения при создании контекстного ретривера: {str(e)}")
+        logger.error(
+            f"Ошибка выполнения при создании контекстного ретривера: {str(e)}"
+        )
         raise
     except Exception as e:
-        logger.error(f"Непредвиденная ошибка создания цепочки поиска: {str(e)}")
+        logger.error(
+            f"Непредвиденная ошибка создания цепочки поиска: {str(e)}"
+        )
         raise
 
 
 async def get_conversational_rag_chain(
-    retriever_chain: Any,
-    llm_2: ChatOpenAI,
-    prompt_text: str
+    retriever_chain: Any, llm_2: ChatOpenAI, prompt_text: str
 ) -> Any:
     """
     Создание цепочки Retrieval-Augmented Generation (RAG).
@@ -415,18 +450,25 @@ async def get_conversational_rag_chain(
         Exception: Любая другая ошибка.
     """
     try:
-        prompt = ChatPromptTemplate.from_messages([
-            SystemMessagePromptTemplate.from_template(prompt_text + "\nДокумент с информацией для ответа пользователю:\n\n{context}"),
-            MessagesPlaceholder(variable_name="history"),
-            HumanMessagePromptTemplate.from_template("{input}")
-        ])
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessagePromptTemplate.from_template(
+                    prompt_text
+                    + "\nДокумент с информацией для ответа пользователю:\n\n{context}"
+                ),
+                MessagesPlaceholder(variable_name="history"),
+                HumanMessagePromptTemplate.from_template("{input}"),
+            ]
+        )
         stuff_documents_chain = create_stuff_documents_chain(llm_2, prompt)
         return create_retrieval_chain(retriever_chain, stuff_documents_chain)
     except ValueError as e:
         logger.error(f"Ошибка параметров при создании RAG цепочки: {str(e)}")
         raise
     except KeyError as e:
-        logger.error(f"Отсутствует необходимый ключ данных в RAG цепочке: {str(e)}")
+        logger.error(
+            f"Отсутствует необходимый ключ данных в RAG цепочке: {str(e)}"
+        )
         raise
     except Exception as e:
         logger.error(f"Непредвиденная ошибка создания RAG цепочки: {str(e)}")
@@ -438,7 +480,7 @@ async def run_gpt(
     bot: Any,
     prompt_text: str,
     user_input: str,
-    history: List[Dict[str, str]]
+    history: List[Dict[str, str]],
 ) -> Union[str, None]:
     """
     Обработка большого объема текста с использованием RAG (Retrieval-Augmented Generation).
@@ -460,16 +502,29 @@ async def run_gpt(
     """
     try:
         formatted_history = [
-            {"role": "user", "content": entry['question']}
-            if 'question' in entry else {"role": "assistant", "content": entry['response']}
-            for entry in history if 'question' in entry and 'response' in entry
+            (
+                {"role": "user", "content": entry["question"]}
+                if "question" in entry
+                else {"role": "assistant", "content": entry["response"]}
+            )
+            for entry in history
+            if "question" in entry and "response" in entry
         ]
 
         if len(formatted_history) != len(history) * 2:
-            logger.warning("Некорректный формат истории для пользователя. Пропущены некоторые записи.")
+            logger.warning(
+                "Некорректный формат истории для пользователя. Пропущены некоторые записи."
+            )
 
-        total_tokens_input = count_input_tokens(history=history, user_input=user_input, prompt=prompt_text, model=MODEL_NAME)
-        logger.info(f"Общее количество токенов для запроса: {total_tokens_input}")
+        total_tokens_input = count_input_tokens(
+            history=history,
+            user_input=user_input,
+            prompt=prompt_text,
+            model=MODEL_NAME,
+        )
+        logger.info(
+            f"Общее количество токенов для запроса: {total_tokens_input}"
+        )
 
         limit = get_user_limit(user_id)
         if limit - total_tokens_input <= 0:
@@ -478,18 +533,24 @@ async def run_gpt(
             return None
 
         retriever_chain = await get_context_retriever_chain(llm, prompt_text)
-        conversation_rag_chain = await get_conversational_rag_chain(retriever_chain, llm, prompt_text)
+        conversation_rag_chain = await get_conversational_rag_chain(
+            retriever_chain, llm, prompt_text
+        )
 
         response = await asyncio.to_thread(
             conversation_rag_chain.invoke,
-            {"history": formatted_history, "input": user_input}
+            {"history": formatted_history, "input": user_input},
         )
 
-        response_text = response.get('answer', '')
-        total_tokens_response = count_output_tokens(response_text, model=MODEL_NAME)
+        response_text = response.get("answer", "")
+        total_tokens_response = count_output_tokens(
+            response_text, model=MODEL_NAME
+        )
 
         total_tokens = total_tokens_input + total_tokens_response
-        logger.info(f"Общее количество токенов (входные + ответ): {total_tokens}")
+        logger.info(
+            f"Общее количество токенов (входные + ответ): {total_tokens}"
+        )
 
         new_limit = limit - total_tokens
         update_user_limit(user_id, new_limit)
@@ -497,7 +558,9 @@ async def run_gpt(
         mem_response = reformulate_response(response_text, user_id)
         return mem_response
     except BadRequestError as e:
-        logger.error(f"Ошибка при обработке запроса пользователя {user_id}: {e}")
+        logger.error(
+            f"Ошибка при обработке запроса пользователя {user_id}: {e}"
+        )
         return MESSAGES["bad_request_error"]["en"]
     except RateLimitError as e:
         logger.error(f"Ошибка большого количества запросов: {e}")
@@ -506,11 +569,15 @@ async def run_gpt(
         logger.error(f"Ошибка ключа данных пользователя {user_id}: {e}")
         return MESSAGES["key_error"]["en"]
     except ValueError as e:
-        logger.error(f"Некорректное значение в данных для пользователя {user_id}: {e}")
+        logger.error(
+            f"Некорректное значение в данных для пользователя {user_id}: {e}"
+        )
         return MESSAGES["value_error"]["en"]
     except Exception as e:
         import traceback
-        trace = traceback.format_exc()
-        logger.error(f"Непредвиденная ошибка для пользователя {user_id}:\n{trace}")
-        return MESSAGES["general_error"]["en"]
 
+        trace = traceback.format_exc()
+        logger.error(
+            f"Непредвиденная ошибка для пользователя {user_id}:\n{trace}"
+        )
+        return MESSAGES["general_error"]["en"]

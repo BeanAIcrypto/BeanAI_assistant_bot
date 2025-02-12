@@ -4,10 +4,14 @@ import re
 import aiohttp
 import cloudscraper
 from bs4 import BeautifulSoup
-from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import (
+    async_playwright,
+    TimeoutError as PlaywrightTimeoutError,
+)
 
 
 logger = logging.getLogger(__name__)
+
 
 def clean_text(text: str) -> str:
     """
@@ -24,7 +28,9 @@ def clean_text(text: str) -> str:
     """
     try:
         text = re.sub(r"\* .+\n", "", text)  # Удаление списков с "*"
-        text = re.sub(r"\+\d+ \(\d+\) \d+-\d+-\d+", "", text)  # Телефонные номера
+        text = re.sub(
+            r"\+\d+ \(\d+\) \d+-\d+-\d+", "", text
+        )  # Телефонные номера
         text = re.sub(r"\w+@\w+\.\w+", "", text)  # Email-адреса
         text = re.sub(r"__+", "", text)  # Линии из "_"
         text = re.sub(r"https?://\S+", "", text)  # URL-ссылки
@@ -32,8 +38,12 @@ def clean_text(text: str) -> str:
         text = re.sub(r"©\s?\d{4}.+\n", "", text)  # Копирайт
         text = re.sub(r"All rights reserved.?\n", "", text)  # Фразы о правах
         text = re.sub(r"\n\s*\n", "\n", text)  # Лишние пустые строки
-        text = re.sub(r"\d{1,2}/\d{1,2}/\d{2,4}", "", text)  # Даты в формате 01/01/2020
-        text = re.sub(r"\d{1,2}\.\d{1,2}\.\d{2,4}", "", text)  # Даты в формате 01.01.2020
+        text = re.sub(
+            r"\d{1,2}/\d{1,2}/\d{2,4}", "", text
+        )  # Даты в формате 01/01/2020
+        text = re.sub(
+            r"\d{1,2}\.\d{1,2}\.\d{2,4}", "", text
+        )  # Даты в формате 01.01.2020
         text = re.sub(r"Follow us on .+\n", "", text)  # Социальные ссылки
         text = re.sub(r" {2,}", " ", text)  # Лишние пробелы
         return text.strip()
@@ -56,8 +66,8 @@ def html_to_text(html_content: str) -> str:
         Exception: Ошибка при преобразовании HTML в текст.
     """
     try:
-        soup = BeautifulSoup(html_content, 'html.parser')
-        return soup.get_text(separator='\n').strip()
+        soup = BeautifulSoup(html_content, "html.parser")
+        return soup.get_text(separator="\n").strip()
     except Exception as e:
         logger.error(f"Ошибка при преобразовании HTML в текст: {e}")
         return ""
@@ -85,7 +95,9 @@ async def process_dynamic_page(url: str) -> str:
             page = await browser.new_page()
 
             try:
-                response = await page.goto(url, wait_until='networkidle', timeout=60000)
+                response = await page.goto(
+                    url, wait_until="networkidle", timeout=60000
+                )
                 await page.wait_for_timeout(10000)
             except PlaywrightTimeoutError:
                 logger.error("Таймаут при загрузке динамической страницы.")
@@ -93,13 +105,20 @@ async def process_dynamic_page(url: str) -> str:
                 return None
 
             if not response or response.status != 200:
-                logger.error(f"Код ответа: {response.status if response else 'None'}")
+                logger.error(
+                    f"Код ответа: {response.status if response else 'None'}"
+                )
                 await browser.close()
                 return None
 
             content = await page.content()
-            if "Please enable JavaScript" in content or "Checking your browser" in content:
-                logger.error("Доступ к странице запрещен: требуется JavaScript.")
+            if (
+                "Please enable JavaScript" in content
+                or "Checking your browser" in content
+            ):
+                logger.error(
+                    "Доступ к странице запрещен: требуется JavaScript."
+                )
                 await browser.close()
                 return None
 
@@ -115,7 +134,9 @@ async def process_dynamic_page(url: str) -> str:
         return None
 
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при обработке динамической страницы {url}: {e}")
+        logger.error(
+            f"Неизвестная ошибка при обработке динамической страницы {url}: {e}"
+        )
         return None
 
 
@@ -138,7 +159,9 @@ async def process_static_page(url: str) -> str:
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 if response.status != 200:
-                    logger.error(f"Ошибка доступа к статической странице. Код ответа: {response.status}")
+                    logger.error(
+                        f"Ошибка доступа к статической странице. Код ответа: {response.status}"
+                    )
                     return None
 
                 content = await response.text()
@@ -150,15 +173,21 @@ async def process_static_page(url: str) -> str:
         return cleaned_text
 
     except aiohttp.ClientError as ce:
-        logger.error(f"Ошибка сети при обработке статической страницы {url}: {ce}")
+        logger.error(
+            f"Ошибка сети при обработке статической страницы {url}: {ce}"
+        )
         return None
 
     except ValueError as ve:
-        logger.error(f"Ошибка преобразования HTML в текст для страницы {url}: {ve}")
+        logger.error(
+            f"Ошибка преобразования HTML в текст для страницы {url}: {ve}"
+        )
         return None
 
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при обработке статической страницы {url}: {e}")
+        logger.error(
+            f"Неизвестная ошибка при обработке статической страницы {url}: {e}"
+        )
         return None
 
 
@@ -177,10 +206,12 @@ def process_with_cloudscraper(url: str) -> str:
     """
     logger.info(f"Обработка ссылки через Cloudscraper: {url}")
     try:
-        scraper = cloudscraper.create_scraper(browser='chrome')
+        scraper = cloudscraper.create_scraper(browser="chrome")
         response = scraper.get(url)
         if response.status_code != 200:
-            logger.error(f"Не удалось получить контент через Cloudscraper. Код: {response.status_code}")
+            logger.error(
+                f"Не удалось получить контент через Cloudscraper. Код: {response.status_code}"
+            )
             return None
 
         content = response.text

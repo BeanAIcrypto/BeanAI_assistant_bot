@@ -32,7 +32,6 @@ PROMTS = {
             "8. Be the reckless Fasolka: speak as if you're trading shitcoins to the max while remembering the risks. Start responding in Fasolka's style without 'Hello!' right now."
         )
     },
-
     "you_tube_link": {
         "en": (
             "You are a specialist analyzing YouTube video transcriptions about cryptocurrencies, finance, development, and blockchain technologies.\n"
@@ -123,11 +122,11 @@ PROMTS = {
     },
     "fix_user_input": {
         "en": "You are an AI agent whose job is to correct incoming text for accurate knowledge base searches:\n."
-               "1. Transliterate the names of cryptocurrencies and projects written in Cyrillic into their original Latin version (e.g. “Aptos” → “Aptos”).\n"
-               "2. Correct typos in names (e.g. “Ethereumm” → “Ethereum”).\n"
-               "3. Do not change text that is not related to cryptocurrencies/blockchain/development/finance.\n"
-               "4. Issue a corrected query or the query itself (if it is off-topic), without comments.\n"
-               "**entry:** (user request)*n"
-               "**Exit:** (corrected request)\n."
-    }
+        "1. Transliterate the names of cryptocurrencies and projects written in Cyrillic into their original Latin version (e.g. “Aptos” → “Aptos”).\n"
+        "2. Correct typos in names (e.g. “Ethereumm” → “Ethereum”).\n"
+        "3. Do not change text that is not related to cryptocurrencies/blockchain/development/finance.\n"
+        "4. Issue a corrected query or the query itself (if it is off-topic), without comments.\n"
+        "**entry:** (user request)*n"
+        "**Exit:** (corrected request)\n."
+    },
 }

@@ -11,7 +11,7 @@ from src.bot.handlers import on_startup
 
 logger = logging.getLogger(__name__)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """
     Основной модуль для запуска Telegram-бота.
 
@@ -25,21 +25,28 @@ if __name__ == '__main__':
     """
     try:
         google_sheets()
-        logger.info('Google Sheets синхронизация запущена')
+        logger.info("Google Sheets синхронизация запущена")
 
         create_db()
-        logger.info('База данных создана')
+        logger.info("База данных создана")
 
         setup_bot()
-        logger.info('Бот настроен и готов к работе')
+        logger.info("Бот настроен и готов к работе")
 
-        logger.info('Бот запущен и ожидает сообщения')
+        logger.info("Бот запущен и ожидает сообщения")
         executor.start_polling(dp, on_startup=on_startup)
 
     except ConnectionError as error:
-        logger.error(f'Ошибка подключения к внешнему сервису: {str(error)}', exc_info=True)
+        logger.error(
+            f"Ошибка подключения к внешнему сервису: {str(error)}",
+            exc_info=True,
+        )
     except FileNotFoundError as error:
-        logger.error(f'Не найден файл конфигурации или зависимостей: {str(error)}', exc_info=True)
+        logger.error(
+            f"Не найден файл конфигурации или зависимостей: {str(error)}",
+            exc_info=True,
+        )
     except Exception as error:
-        logger.error(f'Неизвестная ошибка при запуске бота: {str(error)}', exc_info=True)
-
+        logger.error(
+            f"Неизвестная ошибка при запуске бота: {str(error)}", exc_info=True
+        )

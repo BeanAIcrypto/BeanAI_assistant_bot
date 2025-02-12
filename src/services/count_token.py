@@ -6,6 +6,7 @@ import tiktoken
 
 logger = logging.getLogger(__name__)
 
+
 def count_output_tokens(text: str, model: str = "gpt-4") -> int:
     """
     Подсчитывает количество токенов в заданном тексте для указанной модели.
@@ -30,7 +31,12 @@ def count_output_tokens(text: str, model: str = "gpt-4") -> int:
         raise
 
 
-def count_input_tokens(history: List[dict] = [], user_input: str = '', prompt: str = '', model: str = "gpt-4") -> int:
+def count_input_tokens(
+    history: List[dict] = [],
+    user_input: str = "",
+    prompt: str = "",
+    model: str = "gpt-4",
+) -> int:
     """
     Подсчитывает общее количество токенов в истории чата и текущем запросе пользователя.
 
@@ -54,12 +60,14 @@ def count_input_tokens(history: List[dict] = [], user_input: str = '', prompt: s
             messages.append({"role": "system", "content": prompt})
 
         for entry in history:
-            if 'question' not in entry or 'response' not in entry:
+            if "question" not in entry or "response" not in entry:
                 raise ValueError(
                     f"Отсутствуют обязательные ключи в записи истории: {entry}"
                 )
-            messages.append({"role": "user", "content": entry['question']})
-            messages.append({"role": "assistant", "content": entry['response']})
+            messages.append({"role": "user", "content": entry["question"]})
+            messages.append(
+                {"role": "assistant", "content": entry["response"]}
+            )
 
         messages.append({"role": "user", "content": user_input})
 
@@ -95,11 +103,16 @@ async def get_audio_duration(audio_file: str) -> float:
     """
     try:
         process = await asyncio.create_subprocess_exec(
-            'ffprobe', '-v', 'error', '-show_entries', 'format=duration',
-            '-of', 'default=noprint_wrappers=1:nokey=1',
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
             audio_file,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await process.communicate()
 
@@ -107,10 +120,14 @@ async def get_audio_duration(audio_file: str) -> float:
             try:
                 duration = float(stdout.strip())
                 if duration < 0:
-                    raise ValueError(f"Отрицательная продолжительность: {duration}")
+                    raise ValueError(
+                        f"Отрицательная продолжительность: {duration}"
+                    )
                 return duration
             except ValueError as ve:
-                logger.error(f"Ошибка преобразования продолжительности в число: {ve}")
+                logger.error(
+                    f"Ошибка преобразования продолжительности в число: {ve}"
+                )
                 return 0.0
         else:
             logger.error(f"Ошибка ffprobe: {stderr.decode().strip()}")
@@ -138,14 +155,20 @@ async def count_vois_tokens(audio_parts: List[str]) -> int:
         Exception: Для всех других ошибок при обработке аудиофайлов.
     """
     try:
-        durations = await asyncio.gather(*[get_audio_duration(part) for part in audio_parts])
+        durations = await asyncio.gather(
+            *[get_audio_duration(part) for part in audio_parts]
+        )
         total_duration = sum(durations)
         if total_duration <= 0:
-            raise ValueError("Общая длительность аудио равна нулю или отрицательная.")
+            raise ValueError(
+                "Общая длительность аудио равна нулю или отрицательная."
+            )
 
         token_per_minute = 400
         estimated_tokens = (total_duration / 60) * token_per_minute
-        logger.info(f"Оценочное количество токенов для аудио: {estimated_tokens}")
+        logger.info(
+            f"Оценочное количество токенов для аудио: {estimated_tokens}"
+        )
         return int(estimated_tokens)
     except ValueError as ve:
         logger.error(f"Ошибка в оценке длительности аудио: {ve}")
@@ -153,4 +176,3 @@ async def count_vois_tokens(audio_parts: List[str]) -> int:
     except Exception as e:
         logger.error(f"Ошибка при подсчете токенов для аудио: {e}")
         return 0
-

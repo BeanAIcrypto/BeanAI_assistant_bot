@@ -21,8 +21,11 @@ class GoogleSearchAPIWrapper(BaseTool):
         search_engine_id (str): Идентификатор поисковой системы.
         service (Any): Сервис Google Custom Search API.
     """
+
     name: str = "Google Search"
-    description: str = "Инструмент для выполнения поиска в Google с загрузкой содержимого страниц."
+    description: str = (
+        "Инструмент для выполнения поиска в Google с загрузкой содержимого страниц."
+    )
     api_key: str
     search_engine_id: str
     service: Any = None
@@ -39,8 +42,12 @@ class GoogleSearchAPIWrapper(BaseTool):
         """
         super().__init__(**kwargs)
         try:
-            self.service = build("customsearch", "v1", developerKey=self.api_key)
-            logger.info("Сервис Google Custom Search API успешно инициализирован.")
+            self.service = build(
+                "customsearch", "v1", developerKey=self.api_key
+            )
+            logger.info(
+                "Сервис Google Custom Search API успешно инициализирован."
+            )
         except Exception as e:
             logger.error(f"Ошибка инициализации Google API: {e}")
             raise
@@ -63,11 +70,11 @@ class GoogleSearchAPIWrapper(BaseTool):
             logger.info(f"Загрузка содержимого страницы: {url}")
             response = requests.get(url, timeout=10)
             response.raise_for_status()
-            soup = BeautifulSoup(response.content, 'html.parser')
-            text = soup.get_text(separator='\n')
+            soup = BeautifulSoup(response.content, "html.parser")
+            text = soup.get_text(separator="\n")
 
             # Очистка текста
-            text = re.sub(r"\* .+\n", '', text)
+            text = re.sub(r"\* .+\n", "", text)
             text = re.sub(r"\+\d+ \(\d+\) \d+-\d+-\d+", "", text)
             text = re.sub(r"\w+@\w+\.\w+", "", text)
             text = re.sub(r"__+", "", text)
@@ -104,22 +111,22 @@ class GoogleSearchAPIWrapper(BaseTool):
         """
         try:
             logger.info(f"Выполняем поиск в Google по запросу: '{query}'")
-            res = self.service.cse().list(
-                q=query,
-                cx=self.search_engine_id,
-                num=1
-            ).execute()
+            res = (
+                self.service.cse()
+                .list(q=query, cx=self.search_engine_id, num=1)
+                .execute()
+            )
 
-            if 'items' not in res:
+            if "items" not in res:
                 return "Результаты поиска не найдены."
 
-            results = res['items']
+            results = res["items"]
             detailed_results = []
 
             for item in results:
-                title = item.get('title', '')
-                snippet = item.get('snippet', '')
-                link = item.get('link', '')
+                title = item.get("title", "")
+                snippet = item.get("snippet", "")
+                link = item.get("link", "")
                 page_content = self._fetch_page_content(link)
 
                 detailed_results.append(

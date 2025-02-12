@@ -9,7 +9,10 @@ from src.services.analytics_creating_target import analytics_creating_target
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-async def limit_check(limit: int, message: Message, user_id: int, user_name: str) -> bool:
+
+async def limit_check(
+    limit: int, message: Message, user_id: int, user_name: str
+) -> bool:
     """
     Проверяет лимит запросов пользователя и отправляет уведомление, если лимит превышен или не установлен.
 
@@ -32,11 +35,21 @@ async def limit_check(limit: int, message: Message, user_id: int, user_name: str
 
         if limit <= 0:
             await message.answer(MESSAGES["get_user_limit"]["en"])
-            await analytics_creating_target(user_id, user_name, target_start_id=os.getenv("TARGET_START_ID_LIMIT"), value=None, unit=None)
+            await analytics_creating_target(
+                user_id,
+                user_name,
+                target_start_id=os.getenv("TARGET_START_ID_LIMIT"),
+                value=None,
+                unit=None,
+            )
             return False
 
         return True
     except Exception as e:
-        logger.error(f"Ошибка при проверке лимита для пользователя {user_id}: {str(e)}")
-        await message.reply("Произошла ошибка при проверке лимита. Попробуйте позже.")
+        logger.error(
+            f"Ошибка при проверке лимита для пользователя {user_id}: {str(e)}"
+        )
+        await message.reply(
+            "Произошла ошибка при проверке лимита. Попробуйте позже."
+        )
         return False

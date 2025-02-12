@@ -19,8 +19,8 @@ from aiogram import types
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-API_TOKEN = os.getenv('TG_TOKEN')
-client = OpenAI(api_key=os.getenv('GPT_SECRET_KEY_FASOLKAAI'))
+API_TOKEN = os.getenv("TG_TOKEN")
+client = OpenAI(api_key=os.getenv("GPT_SECRET_KEY_FASOLKAAI"))
 
 
 async def encode_image(image_path: str) -> str:
@@ -39,7 +39,7 @@ async def encode_image(image_path: str) -> str:
     """
     try:
         with open(image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode('utf-8')
+            return base64.b64encode(image_file.read()).decode("utf-8")
     except FileNotFoundError as e:
         logger.error(f"Файл изображения не найден: {e}")
         raise
@@ -48,7 +48,9 @@ async def encode_image(image_path: str) -> str:
         raise
 
 
-async def downloads_image(message: types.Message, file_url: str) -> Tuple[str, str ]:
+async def downloads_image(
+    message: types.Message, file_url: str
+) -> Tuple[str, str]:
     """
     Загружает изображение по указанному URL в уникальную директорию.
 
@@ -72,24 +74,37 @@ async def downloads_image(message: types.Message, file_url: str) -> Tuple[str, s
         response = requests.get(file_url)
 
         if response.status_code != 200:
-            logger.error("Ошибка загрузки изображения. Статус код: %s", response.status_code)
-            await message.reply("Ошибка загрузки изображения. Попробуйте снова.")
+            logger.error(
+                "Ошибка загрузки изображения. Статус код: %s",
+                response.status_code,
+            )
+            await message.reply(
+                "Ошибка загрузки изображения. Попробуйте снова."
+            )
             await clear_directory(base_dir)
             return None
 
-        with open(image_path, 'wb') as f:
+        with open(image_path, "wb") as f:
             f.write(response.content)
             logger.info("Изображение успешно загружено в %s", image_path)
         return image_path, base_dir
     except requests.exceptions.RequestException as e:
-        logger.error(f"Ошибка запроса при загрузке изображения: {e}", exc_info=True)
+        logger.error(
+            f"Ошибка запроса при загрузке изображения: {e}", exc_info=True
+        )
         await message.reply("There was an error loading the image. Try again.")
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при работе с изображением: {e}", exc_info=True)
-        await message.reply("An unknown error occurred during image processing.")
+        logger.error(
+            f"Неизвестная ошибка при работе с изображением: {e}", exc_info=True
+        )
+        await message.reply(
+            "An unknown error occurred during image processing."
+        )
 
 
-async def image_processing(message, question: str, bot, user_id: int, file_url: str, prompt: str) -> None:
+async def image_processing(
+    message, question: str, bot, user_id: int, file_url: str, prompt: str
+) -> None:
     """
     Обрабатывает изображение и отправляет запрос к OpenAI для получения описания.
 
@@ -112,7 +127,9 @@ async def image_processing(message, question: str, bot, user_id: int, file_url: 
         base64_image = await encode_image(image_path)
         logger.info("Изображение успешно загружено.")
 
-        user_query = message.caption if message.caption else "Опишите изображение."
+        user_query = (
+            message.caption if message.caption else "Опишите изображение."
+        )
         logger.info("Подготовка текста запроса: %s", user_query)
 
         messages = [
@@ -124,7 +141,12 @@ async def image_processing(message, question: str, bot, user_id: int, file_url: 
                 "role": "user",
                 "content": [
                     {"type": "text", "text": question},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}"
+                        },
+                    },
                 ],
             },
         ]
@@ -136,15 +158,23 @@ async def image_processing(message, question: str, bot, user_id: int, file_url: 
 
         if limit - num_tokens <= 0:
             logger.warning("Недостаточно токенов.")
-            await bot.edit_message_text(text=MESSAGES["token_limit_exceeded"]["en"])
+            await bot.edit_message_text(
+                text=MESSAGES["token_limit_exceeded"]["en"]
+            )
             return
 
         logger.info("Отправка изображения и запроса в OpenAI...")
-        response = client.chat.completions.create(model="gpt-4o", messages=messages)
+        response = client.chat.completions.create(
+            model="gpt-4o", messages=messages
+        )
         response_text = response.choices[0].message.content
 
-        total_tokens_response = count_input_tokens(user_input=response_text, model="gpt-4o")
-        update_user_limit(user_id, limit - (num_tokens + total_tokens_response))
+        total_tokens_response = count_input_tokens(
+            user_input=response_text, model="gpt-4o"
+        )
+        update_user_limit(
+            user_id, limit - (num_tokens + total_tokens_response)
+        )
 
         logger.info(response_text)
         if response_text:
@@ -155,7 +185,9 @@ async def image_processing(message, question: str, bot, user_id: int, file_url: 
             raise ValueError("Ответ от OpenAI не содержит контента.")
     except ValueError as e:
         logger.error(f"Ошибка обработки ответа от OpenAI: {e}")
-        await message.reply("The response from OpenAI does not include a description.")
+        await message.reply(
+            "The response from OpenAI does not include a description."
+        )
     except Exception as e:
         logger.error(f"Ошибка обработки изображения: {e}")
         await message.reply("An error occurred during image processing.")

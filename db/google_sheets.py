@@ -14,11 +14,11 @@ from db.database_connection import get_db_connection
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-SERVICE_ACCOUNT_FILE: str = os.getenv('SERVICE_ACCOUNT_FILE')
-SCOPES: List[str] = ['https://www.googleapis.com/auth/spreadsheets']
-SPREADSHEET_ID: str = os.getenv('SPREADSHEET_ID')
+SERVICE_ACCOUNT_FILE: str = os.getenv("SERVICE_ACCOUNT_FILE")
+SCOPES: List[str] = ["https://www.googleapis.com/auth/spreadsheets"]
+SPREADSHEET_ID: str = os.getenv("SPREADSHEET_ID")
 
-db_path: str = 'db/database.db'
+db_path: str = "db/database.db"
 db_exists: bool = os.path.exists(db_path)
 
 max_sheet_length: int = 25000
@@ -35,8 +35,10 @@ def get_google_sheets_service() -> Optional[object]:
         GoogleSheetsAuthError: Ошибка при авторизации Google Sheets API.
     """
     try:
-        credentials = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-        service = build('sheets', 'v4', credentials=credentials)
+        credentials = Credentials.from_service_account_file(
+            SERVICE_ACCOUNT_FILE, scopes=SCOPES
+        )
+        service = build("sheets", "v4", credentials=credentials)
         logger.info("Авторизация Google Sheets успешна.")
         return service
     except DefaultCredentialsError as e:
@@ -45,7 +47,6 @@ def get_google_sheets_service() -> Optional[object]:
     except Exception as e:
         logger.error(f"Ошибка при авторизации Google Sheets: {str(e)}")
         raise Exception(f"Ошибка при авторизации Google Sheets: {str(e)}")
-
 
 
 def clear_google_sheet(service: object, sheet_name: str) -> None:
@@ -62,9 +63,7 @@ def clear_google_sheet(service: object, sheet_name: str) -> None:
     """
     try:
         service.spreadsheets().values().clear(
-            spreadsheetId=SPREADSHEET_ID,
-            range=sheet_name,
-            body={}
+            spreadsheetId=SPREADSHEET_ID, range=sheet_name, body={}
         ).execute()
         logger.info(f"Диапазон {sheet_name} успешно очищен.")
     except HttpError as e:
@@ -93,7 +92,9 @@ def get_data_user_from_psycopg2(table_name: str) -> List[List[Optional[str]]]:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(f"SELECT id, question, response, dialog_score FROM {table_name};")
+            cursor.execute(
+                f"SELECT id, question, response, dialog_score FROM {table_name};"
+            )
             data = cursor.fetchall()
             limited_data = [
                 [
@@ -105,17 +106,25 @@ def get_data_user_from_psycopg2(table_name: str) -> List[List[Optional[str]]]:
             logger.info(f"Данные из таблицы {table_name} успешно извлечены.")
             return limited_data
     except psycopg2.OperationalError as e:
-        logger.error(f"Ошибка операционного соединения с базой данных PostgreSQL: {str(e)}")
+        logger.error(
+            f"Ошибка операционного соединения с базой данных PostgreSQL: {str(e)}"
+        )
         return []
     except psycopg2.DatabaseError as e:
-        logger.error(f"Ошибка при выполнении запроса к базе данных PostgreSQL: {str(e)}")
+        logger.error(
+            f"Ошибка при выполнении запроса к базе данных PostgreSQL: {str(e)}"
+        )
         return []
     except Exception as e:
-        logger.error(f"Ошибка при извлечении данных из базы данных PostgreSQL: {str(e)}")
+        logger.error(
+            f"Ошибка при извлечении данных из базы данных PostgreSQL: {str(e)}"
+        )
         return []
 
 
-def append_data_to_sheet(service: object, data: List[List[Optional[str]]], sheet_name: str) -> None:
+def append_data_to_sheet(
+    service: object, data: List[List[Optional[str]]], sheet_name: str
+) -> None:
     """
     Добавляет данные в Google Sheets.
 
@@ -129,25 +138,34 @@ def append_data_to_sheet(service: object, data: List[List[Optional[str]]], sheet
         Exception: Общая ошибка при добавлении данных в Google Sheets.
     """
     try:
-        body = {'values': data}
-        result = service.spreadsheets().values().append(
-            spreadsheetId=SPREADSHEET_ID,
-            range=sheet_name,
-            valueInputOption='RAW',
-            insertDataOption='INSERT_ROWS',
-            body=body
-        ).execute()
-        logger.info(f"{result.get('updates').get('updatedCells')} ячеек добавлено в {sheet_name}.")
+        body = {"values": data}
+        result = (
+            service.spreadsheets()
+            .values()
+            .append(
+                spreadsheetId=SPREADSHEET_ID,
+                range=sheet_name,
+                valueInputOption="RAW",
+                insertDataOption="INSERT_ROWS",
+                body=body,
+            )
+            .execute()
+        )
+        logger.info(
+            f"{result.get('updates').get('updatedCells')} ячеек добавлено в {sheet_name}."
+        )
     except HttpError as e:
-        logger.error(f"Ошибка HTTP при добавлении данных в Google Sheets: {str(e)}")
+        logger.error(
+            f"Ошибка HTTP при добавлении данных в Google Sheets: {str(e)}"
+        )
     except Exception as e:
         logger.error(f"Ошибка при добавлении данных в Google Sheets: {str(e)}")
 
 
 def append_row_to_google_sheet(
-        row_data: List[Optional[str]],
-        sheet_name: str,
-        service: object=get_google_sheets_service()
+    row_data: List[Optional[str]],
+    sheet_name: str,
+    service: object = get_google_sheets_service(),
 ) -> None:
     """
     Добавляет строку данных в Google Sheets.
@@ -162,22 +180,33 @@ def append_row_to_google_sheet(
         Exception: Общая ошибка при добавлении строки в Google Sheets.
     """
     try:
-        body = {'values': [row_data]}
-        result = service.spreadsheets().values().append(
-            spreadsheetId=SPREADSHEET_ID,
-            range=sheet_name,
-            valueInputOption='RAW',
-            insertDataOption='INSERT_ROWS',
-            body=body
-        ).execute()
-        logger.info(f"{result.get('updates').get('updatedCells')} ячеек добавлено в лист {sheet_name}.")
+        body = {"values": [row_data]}
+        result = (
+            service.spreadsheets()
+            .values()
+            .append(
+                spreadsheetId=SPREADSHEET_ID,
+                range=sheet_name,
+                valueInputOption="RAW",
+                insertDataOption="INSERT_ROWS",
+                body=body,
+            )
+            .execute()
+        )
+        logger.info(
+            f"{result.get('updates').get('updatedCells')} ячеек добавлено в лист {sheet_name}."
+        )
     except HttpError as e:
-        logger.error(f"Ошибка HTTP при добавлении строки в Google Sheets: {str(e)}")
+        logger.error(
+            f"Ошибка HTTP при добавлении строки в Google Sheets: {str(e)}"
+        )
     except Exception as e:
         logger.error(f"Ошибка при добавлении строки в Google Sheets: {str(e)}")
 
 
-def get_google_sheet_data(sheet_name: str, service: object = get_google_sheets_service()) -> List[List[str]]:
+def get_google_sheet_data(
+    sheet_name: str, service: object = get_google_sheets_service()
+) -> List[List[str]]:
     """
     Получает все данные с листа Google Sheets.
 
@@ -192,13 +221,17 @@ def get_google_sheet_data(sheet_name: str, service: object = get_google_sheets_s
         HttpError: Ошибка HTTP при получении данных из Google Sheets.
     """
     try:
-        sheet_data = service.spreadsheets().values().get(
-            spreadsheetId=SPREADSHEET_ID,
-            range=sheet_name
-        ).execute()
+        sheet_data = (
+            service.spreadsheets()
+            .values()
+            .get(spreadsheetId=SPREADSHEET_ID, range=sheet_name)
+            .execute()
+        )
         return sheet_data.get("values", [])
     except HttpError as e:
-        logger.error(f"Ошибка HTTP при получении данных из Google Sheets: {str(e)}")
+        logger.error(
+            f"Ошибка HTTP при получении данных из Google Sheets: {str(e)}"
+        )
         return []
     except Exception as e:
         logger.error(f"Ошибка при получении данных из Google Sheets: {str(e)}")
@@ -206,11 +239,11 @@ def get_google_sheet_data(sheet_name: str, service: object = get_google_sheets_s
 
 
 def update_google_sheet_row(
-        response_id: int,
-        new_value: str,
-        sheet_name: str = 'history',
-        column_index: int = 3,
-        service: object = get_google_sheets_service()
+    response_id: int,
+    new_value: str,
+    sheet_name: str = "history",
+    column_index: int = 3,
+    service: object = get_google_sheets_service(),
 ) -> None:
     """
     Обновляет значение в указанной строке Google Sheets по response_id.
@@ -227,30 +260,38 @@ def update_google_sheet_row(
         Exception: Общая ошибка при обновлении строки Google Sheets.
     """
     try:
-        sheet_data = get_google_sheet_data(sheet_name='history', service=get_google_sheets_service())
+        sheet_data = get_google_sheet_data(
+            sheet_name="history", service=get_google_sheets_service()
+        )
         updated = False
 
         for i, row in enumerate(sheet_data):
             if len(row) > 0 and str(row[0]) == str(response_id):
                 if len(row) <= column_index:
-                    row.extend([''] * (column_index - len(row) + 1))
+                    row.extend([""] * (column_index - len(row) + 1))
                 row[column_index] = new_value
 
                 service.spreadsheets().values().update(
                     spreadsheetId=SPREADSHEET_ID,
                     range=f"{sheet_name}!A{i+1}",
                     valueInputOption="RAW",
-                    body={"values": [row]}
+                    body={"values": [row]},
                 ).execute()
 
-                logger.info(f"Строка с response_id {response_id} успешно обновлена.")
+                logger.info(
+                    f"Строка с response_id {response_id} успешно обновлена."
+                )
                 updated = True
                 break
 
         if not updated:
-            logger.warning(f"Строка с response_id {response_id} не найдена в Google Sheets.")
+            logger.warning(
+                f"Строка с response_id {response_id} не найдена в Google Sheets."
+            )
     except HttpError as e:
-        logger.error(f"Ошибка HTTP при обновлении строки в Google Sheets: {str(e)}")
+        logger.error(
+            f"Ошибка HTTP при обновлении строки в Google Sheets: {str(e)}"
+        )
     except Exception as e:
         logger.error(f"Ошибка при обновлении строки в Google Sheets: {str(e)}")
 
@@ -271,20 +312,26 @@ def google_sheets() -> None:
         service = get_google_sheets_service()
 
         if service:
-            clear_google_sheet(service, 'history')
+            clear_google_sheet(service, "history")
 
-            data_user_history = get_data_user_from_psycopg2('user_history')
+            data_user_history = get_data_user_from_psycopg2("user_history")
 
             if data_user_history:
-                append_data_to_sheet(service, data_user_history, 'history')
+                append_data_to_sheet(service, data_user_history, "history")
             else:
-                logger.info("Нет данных с отрицательными оценками для синхронизации.")
+                logger.info(
+                    "Нет данных с отрицательными оценками для синхронизации."
+                )
         else:
             logger.error("Не удалось подключиться к Google Sheets.")
 
     except ConnectionError as e:
         logger.error(f"Ошибка подключения к Google Sheets: {str(e)}")
     except ValueError as e:
-        logger.error(f"Ошибка данных при синхронизации с Google Sheets: {str(e)}")
+        logger.error(
+            f"Ошибка данных при синхронизации с Google Sheets: {str(e)}"
+        )
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при синхронизации с Google Sheets: {str(e)}")
+        logger.error(
+            f"Неизвестная ошибка при синхронизации с Google Sheets: {str(e)}"
+        )

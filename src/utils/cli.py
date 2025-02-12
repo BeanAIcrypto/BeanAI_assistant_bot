@@ -4,6 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def parse_arguments():
     """
     Анализирует входные параметры с помощью argparse.
@@ -16,13 +17,15 @@ def parse_arguments():
         SystemExit: Выход из программы, если произошла ошибка.
     """
     try:
-        parser = argparse.ArgumentParser(description="Парсинг входных параметров")
+        parser = argparse.ArgumentParser(
+            description="Парсинг входных параметров"
+        )
 
         parser.add_argument(
             "--init",
             default=False,
             action="store_true",
-            help="Флаг, указывающий на инициализацию без реального выполнения"
+            help="Флаг, указывающий на инициализацию без реального выполнения",
         )
 
         args = parser.parse_args()

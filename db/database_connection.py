@@ -10,12 +10,13 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 DB_CONFIG: Dict[str, str] = {
-    'dbname': os.getenv('DB_NAME', ''),
-    'user': os.getenv('DB_USER', ''),
-    'password': os.getenv('DB_PASSWORD', ''),
-    'host': os.getenv('DB_HOST', ''),
-    'port': os.getenv('DB_PORT', '')
+    "dbname": os.getenv("DB_NAME", ""),
+    "user": os.getenv("DB_USER", ""),
+    "password": os.getenv("DB_PASSWORD", ""),
+    "host": os.getenv("DB_HOST", ""),
+    "port": os.getenv("DB_PORT", ""),
 }
+
 
 def get_db_connection() -> psycopg2.extensions.connection:
     """
@@ -37,5 +38,7 @@ def get_db_connection() -> psycopg2.extensions.connection:
         logger.error(f"Ошибка базы данных PostgreSQL: {error}")
         raise
     except Exception as error:
-        logger.error(f"Неизвестная ошибка при подключении к PostgreSQL: {error}")
+        logger.error(
+            f"Неизвестная ошибка при подключении к PostgreSQL: {error}"
+        )
         raise
