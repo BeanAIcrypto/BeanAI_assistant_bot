@@ -107,7 +107,7 @@ def extract_text_from_docx(file_path: str) -> str:
         _, tipy_doc = os.path.splitext(file_path)
         if tipy_doc == ".doc":
             logger.error(f"Формат .doc не поддерживается: {file_path}")
-            return "The .doc format is not supported. Please provide the document in .docx format."
+            return
         doc: Document = Document(file_path)
         paragraphs: List[str] = [para.text for para in doc.paragraphs]
         return "\n".join(paragraphs)
