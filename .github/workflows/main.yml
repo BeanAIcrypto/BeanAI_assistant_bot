@@ -44,9 +44,9 @@ jobs:
           script: |
             cd /home/BeanAI_assistant_bot/test
             echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
-            sudo docker-compose -f docker-compose.yml -p bean down
-            sudo docker-compose -f docker-compose.yml -p bean pull
-            sudo docker-compose -f docker-compose.yml -p bean --build -d --no-recreate
+            sudo docker-compose -f docker-compose.yml -p bean_test down
+            sudo docker-compose -f docker-compose.yml -p bean_test pull
+            sudo docker-compose -f docker-compose.yml -p bean_test --build -d --no-recreate
             sudo docker image prune --force
             sudo docker volume prune --force
 
