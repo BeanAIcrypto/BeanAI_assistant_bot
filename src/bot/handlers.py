@@ -510,7 +510,7 @@ async def document_handler(message: types.Message) -> None:
         )
         if not text_extraction_function:
             await message.answer(
-                MESSAGES_ERROR["document_handler_error_type_document"]["en"]
+                MESSAGES_ERROR["document_handler_supported_formats"]["en"]
             )
             return
 

@@ -197,13 +197,13 @@ MESSAGES_ERROR = {
         "en": "Failed to extract text from the MHTML file."
     },
     "document_handler_supported_formats": {
-    "en": "Supported formats:\n"
-          "📄 Documents: PDF (.pdf), Word (.docx) (Convert .doc to .docx)\n"
-          "📊 Spreadsheets: Excel (.xlsx) (Convert .xls to .xlsx)\n"
-          "📽 Presentations: PowerPoint (.pptx) (Convert .ppt to .pptx)\n"
-          "📦 Archives: ZIP (.zip), 7Z (.7z) (Convert .rar to .zip)\n"
-          "📝 Markdown: .md\n\n"
-          "If your file is not supported, please convert it before sending.",
+        "en": "Supported formats:\n"
+              "📄 Documents: PDF (.pdf), Word (.docx) (Convert .doc to .docx)\n"
+              "📊 Spreadsheets: Excel (.xlsx) (Convert .xls to .xlsx)\n"
+              "📽 Presentations: PowerPoint (.pptx) (Convert .ppt to .pptx)\n"
+              "📦 Archives: ZIP (.zip), 7Z (.7z) (Convert .rar to .zip)\n"
+              "📝 Markdown: .md\n\n"
+              "If your file is not supported, please convert it before sending.",
 }
 ,
     "document_handler_error_none_document": {
