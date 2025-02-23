@@ -7,20 +7,20 @@ from dotenv import load_dotenv
 import tiktoken
 import requests
 import logging
-from openai import OpenAI
-from src.bot.promt import PROMTS
+from langchain_openai import ChatOpenAI
 from db.dbworker import get_user_limit
 from src.bot.bot_messages import MESSAGES
 from db.dbworker import update_user_limit
 from src.services.count_token import count_input_tokens
 from src.services.clear_directory import clear_directory
 from aiogram import types
+from langchain.schema import HumanMessage, SystemMessage
+
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-API_TOKEN = os.getenv("TG_TOKEN")
-client = OpenAI(api_key=os.getenv("GPT_SECRET_KEY_FASOLKAAI"))
+client = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=os.getenv("GPT_SECRET_KEY_FASOLKAAI"))
 
 
 async def encode_image(image_path: str) -> str:
@@ -79,9 +79,8 @@ async def downloads_image(
                 response.status_code,
             )
             await message.reply(
-                "Ошибка загрузки изображения. Попробуйте снова."
+                "Error loading the image. Try again."
             )
-            await clear_directory(base_dir)
             return None
 
         with open(image_path, "wb") as f:
@@ -92,19 +91,21 @@ async def downloads_image(
         logger.error(
             f"Ошибка запроса при загрузке изображения: {e}", exc_info=True
         )
-        await message.reply("There was an error loading the image. Try again.")
+        await message.reply(
+            "There was an error loading the image. Try again."
+        )
     except Exception as e:
         logger.error(
             f"Неизвестная ошибка при работе с изображением: {e}", exc_info=True
         )
         await message.reply(
-            "An unknown error occurred during image processing."
+            "An unknown error occurred during image processing. "
         )
 
 
 async def image_processing(
     message, question: str, bot, user_id: int, file_url: str, prompt: str
-) -> None:
+) -> str:
     """
     Обрабатывает изображение и отправляет запрос к OpenAI для получения описания.
 
@@ -113,8 +114,8 @@ async def image_processing(
         question (str): Вопрос пользователя.
         bot: Экземпляр Telegram-бота.
         user_id (int): ID пользователя.
-        file_url (str): Путь сохранения картинки.
-        prompt(str): Промт и текущей датой.
+        file_url (str): Путь к картинке.
+        prompt (str): Промт с текущей датой.
 
     Returns:
         None
@@ -122,33 +123,19 @@ async def image_processing(
     Raises:
         ValueError: Ошибка в ответе от OpenAI.
     """
+    image_path, base_dir = await downloads_image(message, file_url)
+    base64_image = await encode_image(image_path)
+    logger.info("Изображение успешно загружено.")
     try:
-        image_path, base_dir = await downloads_image(message, file_url)
-        base64_image = await encode_image(image_path)
-        logger.info("Изображение успешно загружено.")
-
         user_query = (
             message.caption if message.caption else "Опишите изображение."
         )
         logger.info("Подготовка текста запроса: %s", user_query)
 
         messages = [
-            {
-                "role": "system",
-                "content": [{"type": "text", "text": prompt}],
-            },
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": question},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{base64_image}"
-                        },
-                    },
-                ],
-            },
+            SystemMessage(content=prompt),
+            HumanMessage(content=question),
+            HumanMessage(content=f"<image>{base64_image}</image>")
         ]
 
         logger.info("Подсчёт токенов в запросе...")
@@ -164,10 +151,8 @@ async def image_processing(
             return
 
         logger.info("Отправка изображения и запроса в OpenAI...")
-        response = client.chat.completions.create(
-            model="gpt-4o", messages=messages
-        )
-        response_text = response.choices[0].message.content
+        response = client.invoke(messages)
+        response_text = response.content
 
         total_tokens_response = count_input_tokens(
             user_input=response_text, model="gpt-4o"
@@ -179,15 +164,15 @@ async def image_processing(
         logger.info(response_text)
         if response_text:
             logger.info("Успешно получен ответ от OpenAI.")
-            await clear_directory(base_dir)
             return response_text
         else:
             raise ValueError("Ответ от OpenAI не содержит контента.")
     except ValueError as e:
         logger.error(f"Ошибка обработки ответа от OpenAI: {e}")
-        await message.reply(
-            "The response from OpenAI does not include a description."
-        )
+        await message.reply("The response from OpenAI does not include a description.")
     except Exception as e:
         logger.error(f"Ошибка обработки изображения: {e}")
         await message.reply("An error occurred during image processing.")
+    finally:
+        await clear_directory(base_dir)
+

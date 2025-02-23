@@ -291,12 +291,6 @@ async def you_tube_link_handler(message: types.Message) -> None:
         if not await limit_check(limit, message, user_id, user_name):
             return
 
-        you_tube_status = get_user_status_you_tube(user_id)
-        if int(you_tube_status) == 1:
-            await message.answer(MESSAGES["status_you_tube"]["en"])
-            return
-        update_status_you_tube(user_id, status=1)
-
         url_match = re.search(
             r"https:\/\/(www\.)?(youtube\.com|youtu\.be)\/[^\s]+", text
         )
@@ -334,20 +328,17 @@ async def you_tube_link_handler(message: types.Message) -> None:
         )
         await awaiting_message.delete()
 
-        update_status_you_tube(user_id, status=0)
     except ValueError as value_error:
         logger.error(
             f"Ошибка обработки YouTube ссылки: {value_error}", exc_info=True
         )
         await message.reply(MESSAGES_ERROR["YouTube_link_handler_error"]["en"])
-        update_status_you_tube(user_id, status=0)
     except Exception as e:
         logger.error(
             f"Неизвестная ошибка при обработке YouTube ссылки: {e}",
             exc_info=True,
         )
         await message.reply(MESSAGES_ERROR["YouTube_link_handler_error"]["en"])
-        update_status_you_tube(user_id, status=0)
 
 
 @dp.message_handler(
@@ -521,12 +512,14 @@ async def document_handler(message: types.Message) -> None:
             await message.answer(
                 MESSAGES_ERROR["document_handler_error_type_document"]["en"]
             )
+            return
 
         text_document = text_extraction_function(file_path)
         if not text_document:
             await message.answer(
                 MESSAGES_ERROR["document_handler_error_none_document"]["en"]
             )
+            return
 
         logger.info(
             f"Из файла {file_name} извлечен текст: {text_document[:1000]}"

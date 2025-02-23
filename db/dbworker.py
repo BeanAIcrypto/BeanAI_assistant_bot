@@ -44,8 +44,7 @@ def create_db() -> None:
                      user_id BIGINT UNIQUE,
                      username TEXT,
                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                     subscription_reminder_sent INTEGER DEFAULT 0,
-                     status_you_tube INTEGER DEFAULT 0
+                     subscription_reminder_sent INTEGER DEFAULT 0
                  )
              """
             )
