@@ -133,9 +133,25 @@ async def image_processing(
         logger.info("Подготовка текста запроса: %s", user_query)
 
         messages = [
-            SystemMessage(content=prompt),
-            HumanMessage(content=question),
-            HumanMessage(content=f"<image>{base64_image}</image>")
+            {
+                "role": "system",
+                "content": [{"type": "text", "text": prompt}],
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": question,
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}"
+                        },
+                    },
+                ],
+            },
         ]
 
         logger.info("Подсчёт токенов в запросе...")

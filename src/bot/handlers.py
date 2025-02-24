@@ -312,6 +312,7 @@ async def you_tube_link_handler(message: types.Message) -> None:
         link_text = await you_tube_link_processing(url, user_id, message, bot)
         if not link_text:
             raise ValueError("Ошибка извлечения текста из YouTube ссылки")
+            return
 
         question = f'Пользователь предоставил ссылку: "{url}". Содержание ссылки:\n{link_text}'
         logger.info(f"Из YouTube ссылки получен текст: {link_text[:1000]}")

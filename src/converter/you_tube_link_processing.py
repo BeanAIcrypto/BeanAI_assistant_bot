@@ -27,21 +27,18 @@ async def you_tube_link_processing(
     try:
         logger.info(f"[USER {user_id}] Начало обработки видео: {url}")
 
-        # Загружаем субтитры
         loader = YoutubeLoader.from_youtube_url(
             url,
             add_video_info=False,
             language=["ru", "en", "auto"],
         )
-        documents = loader.load()  # documents - это список объектов Document
+        documents = loader.load()
 
-        # Проверяем, есть ли транскрипция
         if not documents:
             logger.warning(f"[USER {user_id}] Видео {url} не содержит транскрипции.")
-            await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["no_transcript"])
+            await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["no_transcript"]["en"])
             return None
 
-        # Извлекаем текст из списка документов
         transcripts = "\n".join([doc.page_content for doc in documents])
 
         logger.info(f"[USER {user_id}] Успешно получена транскрипция (первые 500 символов): {transcripts[:500]}")
@@ -50,48 +47,48 @@ async def you_tube_link_processing(
 
     except NoTranscriptFound:
         logger.warning(f"[USER {user_id}] Не найдено доступных субтитров для видео {url}.")
-        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["no_transcript"])
+        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["no_transcript"]["en"])
         return None
 
     except TranscriptsDisabled:
         logger.warning(f"[USER {user_id}] У видео {url} отключены субтитры.")
-        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["transcripts_disabled"])
+        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["transcripts_disabled"]["en"])
         return None
 
     except ConnectionError:
         logger.error(f"[USER {user_id}] Ошибка соединения при загрузке субтитров для видео {url}.")
-        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["connection_error"])
+        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["connection_error"]["en"])
         return None
 
     except TimeoutError:
         logger.error(f"[USER {user_id}] Превышено время ожидания при загрузке субтитров для видео {url}.")
-        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["timeout_error"])
+        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["timeout_error"]["en"])
         return None
 
     except PermissionError:
         logger.error(f"[USER {user_id}] Ошибка прав доступа при обработке видео {url}.")
-        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["permission_error"])
+        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["permission_error"]["en"])
         return None
 
     except ImportError:
         logger.critical(
             '[SYSTEM] Ошибка импорта "youtube_transcript_api". Проверьте, что библиотека установлена (`pip install youtube-transcript-api`).'
         )
-        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["unknown_error"])
+        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["unknown_error"]["en"])
         return None
 
     except ValueError:
         logger.error(f"[USER {user_id}] Ошибка значения при обработке видео {url}.")
-        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["unknown_error"])
+        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["unknown_error"]["en"])
         return None
 
     except TypeError:
         logger.error(f"[USER {user_id}] Ошибка типа данных при обработке видео {url}.")
-        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["unknown_error"])
+        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["unknown_error"]["en"])
         return None
 
     except Exception as e:
         logger.critical(f"[USER {user_id}] Непредвиденная ошибка при обработке видео {url}: {str(e)}", exc_info=True)
-        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["unknown_error"])
+        await message.answer(MESSAGES_ERROR_YOU_TUBE_LINK_PROCESSING["unknown_error"]["en"])
         return None
 
