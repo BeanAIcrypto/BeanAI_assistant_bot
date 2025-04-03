@@ -16,6 +16,9 @@ PROMTS = {
             "9. When analyzing information from your knowledge base and the Internet, and when formulating a response, consider that today’s date is: "
         )
     },
+    "system_prompt": "You are a question topic classifier. Respond only with 'True' or 'False'.",
+    "user_prompt": f"Is this question related to cryptocurrencies, blockchain, finance, or development in these areas?\n\nQuestion: ",
+
     "mem_prompt": {
         "en": (
             "You turn any incoming information into a cheeky, memetic response in the style of fearless crypto-guru Bean.\n"

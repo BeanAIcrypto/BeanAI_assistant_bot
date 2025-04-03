@@ -14,7 +14,6 @@ from db.dbworker import update_user_limit
 from src.services.count_token import count_input_tokens
 from src.services.clear_directory import clear_directory
 from aiogram import types
-from langchain.schema import HumanMessage, SystemMessage
 
 
 load_dotenv()
@@ -79,7 +78,7 @@ async def downloads_image(
                 response.status_code,
             )
             await message.reply(
-                "Error loading the image. Try again."
+                "Image loading error. Please try again."
             )
             return None
 
@@ -92,14 +91,14 @@ async def downloads_image(
             f"Ошибка запроса при загрузке изображения: {e}", exc_info=True
         )
         await message.reply(
-            "There was an error loading the image. Try again."
+            "An error occurred while loading the image. Please try again."
         )
     except Exception as e:
         logger.error(
             f"Неизвестная ошибка при работе с изображением: {e}", exc_info=True
         )
         await message.reply(
-            "An unknown error occurred during image processing. "
+            "An unknown error occurred while processing the image."
         )
 
 
@@ -128,7 +127,7 @@ async def image_processing(
     logger.info("Изображение успешно загружено.")
     try:
         user_query = (
-            message.caption if message.caption else "Опишите изображение."
+            message.caption if message.caption else "Describe the image."
         )
         logger.info("Подготовка текста запроса: %s", user_query)
 
@@ -185,10 +184,10 @@ async def image_processing(
             raise ValueError("Ответ от OpenAI не содержит контента.")
     except ValueError as e:
         logger.error(f"Ошибка обработки ответа от OpenAI: {e}")
-        await message.reply("The response from OpenAI does not include a description.")
+        await message.reply("The response from OpenAI does not contain a description.")
     except Exception as e:
         logger.error(f"Ошибка обработки изображения: {e}")
-        await message.reply("An error occurred during image processing.")
+        await message.reply("An error occurred while processing the image.")
     finally:
         await clear_directory(base_dir)
 

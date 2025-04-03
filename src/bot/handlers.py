@@ -16,7 +16,7 @@ from src.converter.document_processing import text_extraction_from_a_document
 from src.converter.voice_processing import transcribe_voice_message
 from src.converter.link_processing import link_processing
 from src.converter.you_tube_link_processing import you_tube_link_processing
-from src.gpt_generated_answer.process_user_message import process_user_message
+from src.generated_answer.process_user_message import process_user_message
 from db.dbworker import (
     create_user,
     update_user_language,
