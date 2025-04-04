@@ -4,6 +4,33 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def process_latex_blocks(text: str) -> str:
+    """
+    Обрабатывает только LaTeX-блоки внутри текста, оставляя остальной текст нетронутым.
+    Распознаёт выражения в \(...\) и \[...\]
+    """
+    try:
+        def replace_inline(match):
+            content = match.group(1)
+            return latex_to_unicode(content)
+
+        def replace_display(match):
+            content = match.group(1)
+            return latex_to_unicode(content)
+
+        # Обрабатываем \[...\]
+        text = re.sub(r"\\\[(.*?)\\\]", lambda m: replace_display(m), text, flags=re.DOTALL)
+
+        # Обрабатываем \(...\)
+        text = re.sub(r"\\\((.*?)\\\)", lambda m: replace_inline(m), text, flags=re.DOTALL)
+
+        return text
+
+    except Exception as e:
+        logger.error(f"Ошибка обработки LaTeX-блоков: {str(e)}")
+        return text
+
+
 def latex_to_unicode(text: str) -> str:
     """
     Преобразует LaTeX выражения в Unicode.
@@ -247,8 +274,18 @@ def convert_markdown_to_markdownv2(text: str) -> str:
     try:
         special_chars = r"\[\]()~`>#+\-=|{}.!"
 
+        username_pattern = re.compile(r'(@[A-Za-z0-9_]{5,32})')
+        usernames = {}
+
         link_pattern = re.compile(r"\[([^\]]+)\]\((https?:\/\/[^\)]+)\)")
         links = {}
+
+        def save_username(match):
+            """Сохраняет юзернеймы временно, чтобы не экранировать _ дважды."""
+            username = match.group(0)
+            placeholder = f"%%USERNAME{len(usernames)}%%"
+            usernames[placeholder] = username.replace("_", r"\_")
+            return placeholder
 
         def save_link(match):
             text, url = match.groups()
@@ -258,7 +295,8 @@ def convert_markdown_to_markdownv2(text: str) -> str:
             return placeholder
 
         text = link_pattern.sub(save_link, text)
-        text = latex_to_unicode(text)
+        text = username_pattern.sub(save_username, text)
+        text = process_latex_blocks(text)
 
         def escape_special_chars(part: str) -> str:
             """Экранирует спецсимволы MarkdownV2, но не трогает _ внутри юзернеймов."""
@@ -290,6 +328,9 @@ def convert_markdown_to_markdownv2(text: str) -> str:
 
         for placeholder, link in links.items():
             result = result.replace(placeholder, link)
+
+        for placeholder, username in usernames.items():
+            result = result.replace(placeholder, username)
 
         return result
 
