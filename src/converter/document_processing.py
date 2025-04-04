@@ -1,3 +1,4 @@
+import io
 import logging
 import os
 import zipfile
@@ -5,6 +6,8 @@ import py7zr
 import mimetypes
 import tempfile
 import PyPDF2
+from PIL import Image
+import pytesseract
 import pandas as pd
 from docx import Document
 from pptx import Presentation
@@ -21,7 +24,6 @@ def extract_text_from_pdf(file_path: str) -> str:
         return text
     except Exception as e:
         logger.error(f"Ошибка при обработке PDF {file_path}: {e}")
-        raise ValueError("Ошибка при извлечении текста из PDF.")
 
 def extract_text_from_docx(file_path: str) -> str:
     """Извлекает текст из DOCX файла."""
@@ -31,20 +33,17 @@ def extract_text_from_docx(file_path: str) -> str:
         return "\n".join(paragraphs)
     except Exception as e:
         logger.error(f"Ошибка при обработке DOCX файла {file_path}: {e}")
-        raise Exception("Ошибка при извлечении текста из DOCX.")
 
 def extract_text_from_excel(file_path: str) -> Optional[str]:
     """Извлекает текст из файла Excel (XLSX)."""
     try:
         df = pd.read_excel(file_path)
-        df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
         df = df.dropna(how="all").dropna(axis=1, how="all")
         if df.empty:
-            raise ValueError(f"Файл {file_path} пустой.")
+            logger.error(f"Файл {file_path} пустой.")
         return df.to_markdown(index=False)
     except Exception as e:
         logger.error(f"Ошибка обработки файла Excel {file_path}: {e}")
-        raise Exception("Ошибка при обработке Excel файла.")
 
 def extract_text_from_presentation(file_path: str) -> Optional[str]:
     """Извлекает текст из файла PowerPoint (PPTX)."""
@@ -55,12 +54,23 @@ def extract_text_from_presentation(file_path: str) -> Optional[str]:
             for shape in slide.shapes:
                 if hasattr(shape, "text") and shape.text:
                     text.append(shape.text.strip())
+                elif shape.shape_type == 13:  # PICTURE
+                    try:
+                        image = shape.image
+                        image_bytes = image.blob
+                        image_stream = io.BytesIO(image_bytes)
+
+                        pil_image = Image.open(image_stream)
+                        text_from_image = pytesseract.image_to_string(pil_image, lang="rus+eng")
+                        if text_from_image.strip():
+                            text.append(text_from_image.strip())
+                    except Exception as img_err:
+                        logger.error(f"Ошибка при OCR изображения: {img_err}")
         if not text:
             raise ValueError(f"Файл {file_path} не содержит текста.")
         return "\n".join(text)
     except Exception as e:
         logger.error(f"Ошибка при обработке PPTX файла {file_path}: {e}")
-        raise Exception("Ошибка при обработке презентации.")
 
 def extract_text_from_zip(file_path: str) -> Optional[str]:
     """Извлекает текст из ZIP-архива с учетом MIME-типа."""
@@ -81,11 +91,10 @@ def extract_text_from_zip(file_path: str) -> Optional[str]:
                         else:
                             logger.error(f"Не удалось извлечь текст из файла в ZIP: {file}")
         if not extracted_text:
-            raise ValueError(f"Архив {file_path} не содержит поддерживаемых файлов.")
+            logger.error(f"Архив {file_path} не содержит поддерживаемых файлов.")
         return "\n".join(extracted_text)
     except Exception as e:
         logger.error(f"Ошибка при обработке ZIP-архива {file_path}: {e}")
-        raise Exception("Ошибка при обработке ZIP-архива.")
 
 def extract_text_from_7z(file_path: str) -> Optional[str]:
     """Извлекает текст из файлов в 7Z-архиве с учетом MIME-типа."""
@@ -105,11 +114,10 @@ def extract_text_from_7z(file_path: str) -> Optional[str]:
                         else:
                             logger.error(f"Не удалось извлечь текст из файла: {file}")
         if not extracted_text:
-            raise ValueError(f"7Z-архив '{file_path}' не содержит поддерживаемых файлов.")
+            logger.error(f"7Z-архив '{file_path}' не содержит поддерживаемых файлов.")
         return "\n".join(extracted_text)
     except Exception as e:
         logger.error(f"Ошибка при обработке 7Z-архива {file_path}: {e}")
-        raise Exception("Ошибка при обработке 7Z-архива.")
 
 def extract_text_from_markdown(file_path: str) -> Optional[str]:
     """Извлекает текст из Markdown-файла."""
@@ -117,11 +125,10 @@ def extract_text_from_markdown(file_path: str) -> Optional[str]:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
             if not content.strip():
-                raise ValueError(f"Файл {file_path} пустой или некорректен.")
+                logger.error(f"Файл {file_path} пустой или некорректен.")
         return content
     except Exception as e:
         logger.error(f"Ошибка при обработке Markdown-файла {file_path}: {e}")
-        raise Exception("Ошибка при обработке Markdown-файла.")
 
 text_extraction_from_a_document = {
     "application/pdf": extract_text_from_pdf,
@@ -132,4 +139,3 @@ text_extraction_from_a_document = {
     "application/x-7z-compressed": extract_text_from_7z,
     "text/markdown": extract_text_from_markdown,
 }
-
