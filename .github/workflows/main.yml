@@ -4,10 +4,10 @@ on:
   push:
     branches:
       - test
-#      - main
-#  pull_request:
-#    branches:
-#      - main
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   push_docker_hub_test:
