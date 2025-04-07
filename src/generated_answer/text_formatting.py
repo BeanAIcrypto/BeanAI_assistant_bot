@@ -271,7 +271,7 @@ def convert_markdown_to_markdownv2(text: str) -> str:
         str: Текст, преобразованный в формат MarkdownV2.
     """
     try:
-        special_chars = r"\[\]()~`>#+\-=|{}.!"
+        special_chars = r"\[\]()~`>#+\-=|{}.!_"
 
         username_pattern = re.compile(r'(@[A-Za-z0-9_]{5,32})')
         usernames = {}
