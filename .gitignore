@@ -1,0 +1,17 @@
+.env
+__pycache__
+stalwart-entity-samanta.json
+LOG_file.log
+/fasolka_ai/db/database.db
+/fasolka_ai/База знаний Саманта.docx
+/fasolka_ai/voice_response.mp3
+/fasolka_ai/faiss_index_RU/
+/fasolka_ai/db/stalwart-entity-test-fasolka.json
+/fasolka_ai/db/fasolka.json
+/fasolka_ai/update_limit.py
+/fasolka_ai/db/user_data.json
+/fasolka_ai/Копия БЗ _Фасолька_.md
+/БЗ _Фасолька_ (для загрузки в модель).txt
+/faiss_index_RU/
+/downloads/
+/pyproject.toml

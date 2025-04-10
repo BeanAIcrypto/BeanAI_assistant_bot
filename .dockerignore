@@ -1,0 +1,13 @@
+__pycache__/
+
+downloads/
+db/database.db
+
+*.csv
+export_data/
+
+.vscode/
+.idea/
+.env
+
+.git
